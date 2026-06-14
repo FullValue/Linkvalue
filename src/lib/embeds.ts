@@ -2,6 +2,8 @@ export type EmbedProvider = "youtube" | "spotify";
 
 export interface EmbedInfo {
   provider: EmbedProvider;
+  /** Provider-specific id (YouTube video id / Spotify resource id). */
+  id: string;
   embedUrl: string;
   /** Suggested aspect ratio for the iframe wrapper. */
   aspect: "video" | "audio";
@@ -44,6 +46,7 @@ export function detectEmbed(rawUrl: string): EmbedInfo | null {
     if (m) {
       return {
         provider: "spotify",
+        id: m[2],
         embedUrl: `https://open.spotify.com/embed/${m[1]}/${m[2]}`,
         aspect: "audio",
       };
@@ -56,6 +59,7 @@ export function detectEmbed(rawUrl: string): EmbedInfo | null {
 function yt(id: string): EmbedInfo {
   return {
     provider: "youtube",
+    id,
     embedUrl: `https://www.youtube-nocookie.com/embed/${id}`,
     aspect: "video",
   };

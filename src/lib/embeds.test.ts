@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import { detectEmbed } from "@/lib/embeds";
 
 describe("detectEmbed — YouTube", () => {
-  it("parses a watch URL into a nocookie embed", () => {
-    expect(detectEmbed("https://www.youtube.com/watch?v=dQw4w9WgXcQ")?.embedUrl).toBe(
-      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-    );
+  it("parses a watch URL into a nocookie embed + id", () => {
+    const e = detectEmbed("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(e?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect(e?.id).toBe("dQw4w9WgXcQ");
   });
   it("parses youtu.be short links", () => {
     expect(detectEmbed("https://youtu.be/dQw4w9WgXcQ")?.provider).toBe("youtube");

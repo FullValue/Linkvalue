@@ -1,10 +1,11 @@
-import { ArrowUpRight, Play } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { Block } from "@/lib/supabase/types";
 import type { ResolvedStyles } from "@/lib/themes";
 import { FONT_STACK } from "@/lib/font-stack";
 import { detectEmbed } from "@/lib/embeds";
 import { socialHref, type SocialPlatform } from "@/lib/socials";
 import { SocialIcon } from "@/components/icons/social-icon";
+import { YouTubeEmbed } from "@/components/profile/youtube-embed";
 import { siteConfig } from "@/lib/site";
 
 export interface ProfileViewProfile {
@@ -232,46 +233,20 @@ function EmbedBlock({
     return <LinkButton block={block} styles={styles} mode={mode} href={href} />;
   }
 
-  if (mode === "preview") {
-    return (
-      <div className="lk-button w-full overflow-hidden" style={buttonStyle(styles)}>
-        <div className="flex items-center gap-3 px-5 py-3.5">
-          <Play className="size-4 shrink-0" />
-          <span className="truncate text-sm font-medium">
-            {block.title?.trim() ||
-              (embed.provider === "youtube" ? "YouTube video" : "Spotify")}
-          </span>
-        </div>
-      </div>
-    );
+  // YouTube: show the thumbnail, load the player only on click (preview + live).
+  if (embed.provider === "youtube") {
+    return <YouTubeEmbed id={embed.id} title={block.title} embedUrl={embed.embedUrl} />;
   }
 
+  // Spotify: compact player (already shows cover art + play control).
   return (
-    <div
-      className="w-full overflow-hidden"
-      style={{ borderRadius: 16, background: "rgba(0,0,0,0.2)" }}
-    >
-      {embed.provider === "youtube" ? (
-        <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
-          <iframe
-            src={embed.embedUrl}
-            title={block.title || "YouTube video"}
-            loading="lazy"
-            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            className="absolute inset-0 size-full border-0"
-          />
-        </div>
-      ) : (
-        <iframe
-          src={embed.embedUrl}
-          title={block.title || "Spotify"}
-          loading="lazy"
-          allow="encrypted-media"
-          className="w-full border-0"
-          style={{ height: 152 }}
-        />
-      )}
-    </div>
+    <iframe
+      src={embed.embedUrl}
+      title={block.title || "Spotify"}
+      loading="lazy"
+      allow="encrypted-media"
+      className="w-full rounded-2xl border-0"
+      style={{ height: 152 }}
+    />
   );
 }
