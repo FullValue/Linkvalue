@@ -1,0 +1,6 @@
+# Allow native build scripts required by our toolchain.
+# sharp         -> next/image optimization + OG image generation (satori/sharp)
+# unrs-resolver -> eslint module resolution
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
