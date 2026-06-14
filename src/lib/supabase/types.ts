@@ -168,7 +168,18 @@ export interface Database {
       };
     };
     Views: Record<never, never>;
-    Functions: Record<never, never>;
+    Functions: {
+      link_click_counts: {
+        Args: Record<string, never>;
+        Returns: {
+          block_id: string;
+          title: string | null;
+          url: string | null;
+          type: BlockType;
+          clicks: number;
+        }[];
+      };
+    };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
   };

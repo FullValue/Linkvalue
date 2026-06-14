@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublicProfile } from "@/lib/profile-data";
 import { ProfileView } from "@/components/profile/profile-view";
+import { PageViewTracker } from "@/components/profile/page-view-tracker";
 import { resolveStyles, type CustomStyles } from "@/lib/themes";
 import { themeFontVars } from "@/lib/fonts";
 import { siteConfig } from "@/lib/site";
@@ -46,7 +47,14 @@ export default async function PublicProfilePage({ params }: Params) {
 
   return (
     <main className={`min-h-dvh ${themeFontVars}`}>
-      <ProfileView profile={profile} blocks={blocks} styles={styles} mode="live" />
+      <ProfileView
+        profile={profile}
+        blocks={blocks}
+        styles={styles}
+        mode="live"
+        hrefFor={(block) => `/api/go/${block.id}`}
+      />
+      <PageViewTracker username={profile.username} />
     </main>
   );
 }
