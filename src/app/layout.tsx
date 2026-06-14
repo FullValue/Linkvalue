@@ -6,19 +6,19 @@ import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
 const fontSans = Inter({
-  variable: "--font-sans",
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
 
 const fontHeading = Inter_Tight({
-  variable: "--font-heading",
+  variable: "--font-inter-tight",
   subsets: ["latin"],
   display: "swap",
 });
 
 const fontMono = Geist_Mono({
-  variable: "--font-mono",
+  variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
 });

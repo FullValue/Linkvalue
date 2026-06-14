@@ -1,7 +1,7 @@
 /**
  * Database types.
  *
- * Hand-authored to match supabase/migrations/0001_init.sql so the app is fully
+ * Hand-authored to match the SQL in supabase/migrations/ so the app is fully
  * typed before a Supabase project exists. Once linked, regenerate with:
  *
  *   pnpm db:types

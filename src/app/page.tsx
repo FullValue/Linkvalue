@@ -45,10 +45,16 @@ export default function Home() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
           <Logo />
           <nav className="text-muted-foreground hidden items-center gap-8 text-sm md:flex">
-            <a href="#features" className="hover:text-foreground transition-colors">
+            <a
+              href="#features"
+              className="hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            >
               Features
             </a>
-            <a href="#how" className="hover:text-foreground transition-colors">
+            <a
+              href="#how"
+              className="hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background rounded-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            >
               How it works
             </a>
           </nav>
