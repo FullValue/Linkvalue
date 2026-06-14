@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Inter_Tight, Geist_Mono } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -62,10 +60,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`dark h-full ${fontSans.variable} ${fontHeading.variable} ${fontMono.variable} antialiased`}
     >
-      <body className="flex min-h-full flex-col">
-        <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
-        <Toaster position="top-center" richColors />
-      </body>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

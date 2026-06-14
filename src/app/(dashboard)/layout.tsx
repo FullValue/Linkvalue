@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/user";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { themeFontVars } from "@/lib/fonts";
 
 export default async function DashboardLayout({
@@ -12,13 +14,16 @@ export default async function DashboardLayout({
   if (!profile) redirect("/login");
 
   return (
-    <div className={`flex min-h-dvh flex-col ${themeFontVars}`}>
-      <DashboardNav
-        username={profile.username}
-        displayName={profile.display_name}
-        avatarUrl={profile.avatar_url}
-      />
-      <div className="flex-1">{children}</div>
-    </div>
+    <TooltipProvider delayDuration={200}>
+      <div className={`flex min-h-dvh flex-col ${themeFontVars}`}>
+        <DashboardNav
+          username={profile.username}
+          displayName={profile.display_name}
+          avatarUrl={profile.avatar_url}
+        />
+        <div className="flex-1">{children}</div>
+      </div>
+      <Toaster position="top-center" richColors />
+    </TooltipProvider>
   );
 }
