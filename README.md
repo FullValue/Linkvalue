@@ -74,10 +74,18 @@ pnpm db:push                                          # applies supabase/migrati
 pnpm db:types                                         # regenerate typed schema
 ```
 
-> Prefer the GUI? Paste `supabase/migrations/*_init.sql` into the Supabase
-> **SQL Editor** and run it — it's idempotent-friendly and self-contained.
+> Prefer the GUI? Run each file in `supabase/migrations/` (in filename order)
+> in the Supabase **SQL Editor**. They set up the schema + RLS, reserved-handle
+> enforcement, the signup trigger, the avatars bucket, and the analytics RPC.
 
-### 5. Run
+### 5. Auth settings (one-time)
+
+In **Supabase → Authentication → URL Configuration** set the **Site URL** and add
+your domain to **Redirect URLs** (`http://localhost:3000/**` for local). For an
+instant-access MVP, **Email auto-confirm** is enabled; turn it off + configure SMTP
+to require email verification in production.
+
+### 6. Run
 
 ```bash
 pnpm dev
@@ -96,6 +104,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `pnpm start`     | Serve the production build             |
 | `pnpm lint`      | ESLint                                 |
 | `pnpm typecheck` | `tsc --noEmit`                         |
+| `pnpm test`      | Run the unit test suite (Vitest)       |
 | `pnpm format`    | Prettier write                         |
 | `pnpm db:push`   | Apply migrations to the linked project |
 | `pnpm db:types`  | Regenerate `src/lib/supabase/types.ts` |
@@ -109,23 +118,30 @@ Open [http://localhost:3000](http://localhost:3000).
 src/
   app/
     page.tsx                 # marketing landing (Noir Luminous)
-    layout.tsx               # fonts, providers, metadata
-    globals.css              # design tokens + utilities
+    (auth)/                  # /login, /register
+    (dashboard)/dashboard/   # builder, appearance, analytics, settings
+    [username]/              # public profile (SSR) + OG image + 404
+    auth/                    # email confirm + OAuth callback routes
+    api/go/[blockId]/        # click-tracking redirect
+    api/track/view/          # page-view beacon
+    error.tsx · not-found.tsx
   components/
-    ui/                      # shadcn primitives
-    brand/                   # logo / wordmark
-    marketing/               # landing-only pieces
+    ui/ brand/ marketing/    # primitives, logo, landing
+    auth/ dashboard/ account/
+    builder/ appearance/     # builder + customization (shared context)
+    profile/                 # shared ProfileView (preview + public)
+    analytics/ icons/
   lib/
     supabase/                # browser / server / admin clients + types
     validations/             # Zod schemas (frontier validation)
-    themes/                  # public-page theme + style system
+    themes/ font-stack.ts    # theme + style system
+    embeds.ts socials.ts     # embed detection, social platforms
     usernames.ts             # reserved slugs + handle rules
-    env.ts · env.server.ts   # validated environment
-    site.ts                  # product branding (single source of truth)
-  middleware.ts              # session refresh + route protection
-supabase/
-  migrations/                # SQL schema + RLS + storage policies
-  config.toml
+    auth/ profile-data.ts
+    env.ts env.server.ts     # validated environment
+    site.ts fonts.ts
+  proxy.ts                   # session refresh + route protection
+supabase/migrations/         # schema, RLS, triggers, storage, analytics RPC
 ```
 
 ---
@@ -145,24 +161,54 @@ service role and read back only by their owner.
 
 ---
 
+## Testing
+
+```bash
+pnpm test        # Vitest unit suite (username/handle rules, embed parsing,
+                 # social hrefs, theme resolution, Zod validation)
+```
+
+Critical end-to-end paths (signup → profile trigger, RLS isolation, public-page
+SSR, click/view tracking + dedup) were verified against the live project during
+development; see the commit history. For browser E2E, add Playwright in CI.
+
+---
+
+## Security & privacy
+
+- **RLS everywhere.** Users read/write only their own rows; profiles + active
+  blocks are world-readable for public pages. Reserved handles and the
+  create-profile-on-signup step are enforced **in the database**, not just the app.
+- **Service-role stays server-side.** Analytics writes use it via Route Handlers;
+  it is never exposed to the browser.
+- **Privacy-first analytics.** No IP or PII is stored — only counts. Short-lived,
+  `httpOnly` cookies dedup refreshes.
+- **Headers.** `nosniff`, `SAMEORIGIN`, HSTS, a tight `Permissions-Policy`, and
+  `poweredByHeader` disabled (see `next.config.ts`).
+
+---
+
 ## Deploy (Vercel)
 
 1. Import the repo into Vercel (pnpm + Next.js auto-detected).
-2. Add the four environment variables from the table above
-   (set `NEXT_PUBLIC_SITE_URL` to the production URL).
-3. Deploy. Migrations are applied via the Supabase CLI, not at build time.
+2. Add the four environment variables from the table above; set
+   `NEXT_PUBLIC_SITE_URL` to the production URL.
+3. In Supabase Auth, set the **Site URL** and **Redirect URLs** to the production
+   domain (`https://your-domain/**`).
+4. Apply migrations to the production project (`pnpm db:push`) — not at build time.
+5. Deploy.
 
 ---
 
 ## Roadmap
 
 - **Phase 0** — Foundation: setup, Supabase, schema + RLS, design system ✅
-- **Phase 1** — Auth & accounts (email/password, unique username)
-- **Phase 2** — Builder: block CRUD, drag & drop, profile + live preview
-- **Phase 3** — Visual customization (themes + fine-grained styles)
-- **Phase 4** — Public page `/[username]` (SSR, embeds, Open Graph)
-- **Phase 5** — Analytics (clicks + views)
-- **Phase 6** — Polish, tests, deployment
+- **Phase 1** — Auth & accounts (email/password, unique username) ✅
+- **Phase 2** — Builder: block CRUD, drag & drop, profile + live preview ✅
+- **Phase 3** — Visual customization (6 themes + fine-grained styles) ✅
+- **Phase 4** — Public page `/[username]` (SSR, embeds, Open Graph) ✅
+- **Phase 5** — Analytics (clicks + views) ✅
+- **Phase 6** — Polish, tests, deployment ✅
 
 **Out of scope (by design, architecture stays extensible):** payments, QR codes,
 traffic sources, time-series charts, social OAuth, multi-page profiles.
