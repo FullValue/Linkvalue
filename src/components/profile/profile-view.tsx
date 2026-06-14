@@ -121,7 +121,13 @@ export function ProfileView({
         <div className="mt-6 flex w-full flex-col gap-3">
           {content.map((block) =>
             block.type === "embed" ? (
-              <EmbedBlock key={block.id} block={block} styles={styles} mode={mode} />
+              <EmbedBlock
+                key={block.id}
+                block={block}
+                styles={styles}
+                mode={mode}
+                href={hrefFor?.(block) ?? block.url ?? "#"}
+              />
             ) : (
               <LinkButton
                 key={block.id}
@@ -210,18 +216,18 @@ function EmbedBlock({
   block,
   styles,
   mode,
+  href,
 }: {
   block: Block;
   styles: ResolvedStyles;
   mode: Mode;
+  href: string;
 }) {
   const embed = block.url ? detectEmbed(block.url) : null;
 
   if (!embed) {
-    // Unsupported URL — fall back to a plain link.
-    return (
-      <LinkButton block={block} styles={styles} mode={mode} href={block.url ?? "#"} />
-    );
+    // Unsupported URL — fall back to a tracked link.
+    return <LinkButton block={block} styles={styles} mode={mode} href={href} />;
   }
 
   if (mode === "preview") {

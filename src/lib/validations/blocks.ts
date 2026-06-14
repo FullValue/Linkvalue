@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { SOCIAL_PLATFORMS, type SocialPlatform } from "@/lib/socials";
 
-const urlField = z.url("Enter a valid URL (including https://)").max(2048);
+const urlField = z
+  .url("Enter a valid URL (including https://)")
+  .max(2048)
+  .refine((u) => /^https?:\/\//i.test(u), "URL must start with http:// or https://");
 
 export const linkBlockSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(120),

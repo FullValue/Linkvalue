@@ -52,6 +52,11 @@ describe("block schemas", () => {
     );
     expect(linkBlockSchema.safeParse({ title: "T", url: "nope" }).success).toBe(false);
   });
+  it("rejects non-http(s) URL schemes (XSS guard)", () => {
+    expect(
+      linkBlockSchema.safeParse({ title: "T", url: "javascript:alert(1)" }).success,
+    ).toBe(false);
+  });
   it("embed requires a valid URL", () => {
     expect(embedBlockSchema.safeParse({ url: "https://youtu.be/x" }).success).toBe(true);
     expect(embedBlockSchema.safeParse({ url: "" }).success).toBe(false);
