@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/user";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { themeFontVars } from "@/lib/fonts";
 
 export default async function DashboardLayout({
   children,
@@ -11,7 +12,7 @@ export default async function DashboardLayout({
   if (!profile) redirect("/login");
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className={`flex min-h-dvh flex-col ${themeFontVars}`}>
       <DashboardNav
         username={profile.username}
         displayName={profile.display_name}

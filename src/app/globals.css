@@ -221,4 +221,19 @@
     background-image: radial-gradient(oklch(1 0 0 / 6%) 1px, transparent 1px);
     background-size: 22px 22px;
   }
+
+  /* Public-profile link buttons — hover works with arbitrary inline colors. */
+  .lk-button {
+    transition:
+      transform 0.16s ease,
+      filter 0.16s ease,
+      box-shadow 0.16s ease;
+  }
+  .lk-button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+  }
+  .lk-button:active {
+    transform: translateY(0) scale(0.99);
+  }
 }
