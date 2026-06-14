@@ -24,7 +24,18 @@ export async function GET(
     return NextResponse.redirect(home, 302);
   }
 
-  const res = NextResponse.redirect(block.url, 302);
+  // Self-defending: only ever redirect to an http(s) destination.
+  let dest: URL;
+  try {
+    dest = new URL(block.url);
+  } catch {
+    return NextResponse.redirect(home, 302);
+  }
+  if (dest.protocol !== "http:" && dest.protocol !== "https:") {
+    return NextResponse.redirect(home, 302);
+  }
+
+  const res = NextResponse.redirect(dest.toString(), 302);
 
   const cookieName = `lk_c_${block.id}`;
   if (!request.cookies.get(cookieName)) {

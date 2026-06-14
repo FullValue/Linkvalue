@@ -47,6 +47,12 @@ export function AvatarUploader({ userId }: { userId: string }) {
     if (inputRef.current) inputRef.current.value = "";
   }
 
+  async function removeAvatar() {
+    const supabase = createClient();
+    await supabase.storage.from("avatars").remove([`${userId}/avatar`]);
+    await setAvatar(null);
+  }
+
   return (
     <div className="relative shrink-0">
       <button
@@ -74,7 +80,7 @@ export function AvatarUploader({ userId }: { userId: string }) {
       {profile.avatar_url && !uploading ? (
         <button
           type="button"
-          onClick={() => setAvatar(null)}
+          onClick={removeAvatar}
           className="bg-background hover:bg-secondary absolute -top-1 -right-1 grid size-6 place-items-center rounded-full border shadow-sm"
           aria-label="Remove avatar"
         >

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/user";
+import { clientEnv } from "@/lib/env";
 import {
   linkBlockSchema,
   embedBlockSchema,
@@ -73,6 +74,14 @@ export async function updateProfileAction(values: unknown): Promise<Result> {
 export async function setAvatarAction(url: string | null): Promise<Result> {
   const ctx = await context();
   if (!ctx) return { error: "Not signed in" };
+
+  // Only this project's storage, under the user's own avatars/<id>/ folder.
+  // Prevents an SSRF/foreign URL being persisted into avatar_url, which is
+  // fetched server-side by the OG renderer. The DB has a matching CHECK.
+  if (url !== null) {
+    const prefix = `${clientEnv().NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${ctx.userId}/`;
+    if (!url.startsWith(prefix)) return { error: "Invalid avatar URL" };
+  }
 
   const { error } = await ctx.supabase
     .from("profiles")

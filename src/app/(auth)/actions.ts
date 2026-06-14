@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signInSchema, signUpSchema, usernameSchema } from "@/lib/validations/auth";
 import { siteConfig } from "@/lib/site";
+import { safeNextPath } from "@/lib/safe-redirect";
 
 export type AuthState = {
   error?: string;
@@ -66,14 +67,13 @@ export async function signInAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const next = String(formData.get("next") ?? "");
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     return { error: "Invalid email or password." };
   }
 
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
+  redirect(safeNextPath(formData.get("next")?.toString()));
 }
 
 export async function signOutAction() {

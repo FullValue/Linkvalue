@@ -65,6 +65,8 @@ export function ProfileView({
             alt={displayName}
             width={96}
             height={96}
+            decoding="async"
+            fetchPriority="high"
             className="size-24 rounded-full object-cover"
             style={{ boxShadow: "0 0 0 3px rgba(255,255,255,0.12)" }}
           />
@@ -144,7 +146,7 @@ export function ProfileView({
           href={siteConfig.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-auto pt-10 text-xs font-medium tracking-wide opacity-50 transition-opacity hover:opacity-80"
+          className="mt-auto pt-10 text-xs font-medium tracking-wide opacity-70 transition-opacity hover:opacity-100"
           style={{ color: styles.mutedTextColor }}
         >
           {mode === "preview" ? `${siteConfig.name}` : `Made with ${siteConfig.name}`}

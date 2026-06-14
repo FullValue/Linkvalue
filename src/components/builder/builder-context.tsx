@@ -85,55 +85,55 @@ export function BuilderProvider({
     [],
   );
 
-  const toggleBlock = useCallback(
-    async (id: string, isActive: boolean) => {
-      const prev = blocks;
-      setBlocks((bs) => bs.map((b) => (b.id === id ? { ...b, is_active: isActive } : b)));
-      const res = await toggleBlockAction(id, isActive);
-      if (res.error) {
-        toast.error(res.error);
-        setBlocks(prev);
-      }
-    },
-    [blocks],
-  );
+  // Capture the snapshot inside the updater (not from the render closure) so a
+  // failed mutation reverts the *latest* state even under rapid edits.
+  const toggleBlock = useCallback(async (id: string, isActive: boolean) => {
+    let prev: Block[] = [];
+    setBlocks((bs) => {
+      prev = bs;
+      return bs.map((b) => (b.id === id ? { ...b, is_active: isActive } : b));
+    });
+    const res = await toggleBlockAction(id, isActive);
+    if (res.error) {
+      toast.error(res.error);
+      setBlocks(prev);
+    }
+  }, []);
 
-  const removeBlock = useCallback(
-    async (id: string) => {
-      const prev = blocks;
-      setBlocks((bs) => bs.filter((b) => b.id !== id));
-      const res = await deleteBlockAction(id);
-      if (res.error) {
-        toast.error(res.error);
-        setBlocks(prev);
-      } else {
-        toast.success("Block deleted");
-      }
-    },
-    [blocks],
-  );
+  const removeBlock = useCallback(async (id: string) => {
+    let prev: Block[] = [];
+    setBlocks((bs) => {
+      prev = bs;
+      return bs.filter((b) => b.id !== id);
+    });
+    const res = await deleteBlockAction(id);
+    if (res.error) {
+      toast.error(res.error);
+      setBlocks(prev);
+    } else {
+      toast.success("Block deleted");
+    }
+  }, []);
 
-  const reorder = useCallback(
-    async (orderedIds: string[]) => {
-      const prev = blocks;
-      setBlocks((bs) => {
-        const map = new Map(bs.map((b) => [b.id, b]));
-        let i = 0;
-        const reordered = orderedIds
-          .map((id) => map.get(id))
-          .filter((b): b is Block => Boolean(b))
-          .map((b) => ({ ...b, position: i++ }));
-        const untouched = bs.filter((b) => !orderedIds.includes(b.id));
-        return [...reordered, ...untouched];
-      });
-      const res = await reorderBlocksAction(orderedIds);
-      if (res.error) {
-        toast.error(res.error);
-        setBlocks(prev);
-      }
-    },
-    [blocks],
-  );
+  const reorder = useCallback(async (orderedIds: string[]) => {
+    let prev: Block[] = [];
+    setBlocks((bs) => {
+      prev = bs;
+      const map = new Map(bs.map((b) => [b.id, b]));
+      let i = 0;
+      const reordered = orderedIds
+        .map((id) => map.get(id))
+        .filter((b): b is Block => Boolean(b))
+        .map((b) => ({ ...b, position: i++ }));
+      const untouched = bs.filter((b) => !orderedIds.includes(b.id));
+      return [...reordered, ...untouched];
+    });
+    const res = await reorderBlocksAction(orderedIds);
+    if (res.error) {
+      toast.error(res.error);
+      setBlocks(prev);
+    }
+  }, []);
 
   const saveProfile = useCallback(
     async (values: { display_name: string; bio: string }) => {
@@ -155,9 +155,16 @@ export function BuilderProvider({
   }, []);
 
   const setAvatar = useCallback(async (url: string | null) => {
-    setProfile((p) => ({ ...p, avatar_url: url }));
+    let prev: string | null = null;
+    setProfile((p) => {
+      prev = p.avatar_url;
+      return { ...p, avatar_url: url };
+    });
     const res = await setAvatarAction(url);
-    if (res.error) toast.error(res.error);
+    if (res.error) {
+      toast.error(res.error);
+      setProfile((p) => ({ ...p, avatar_url: prev }));
+    }
   }, []);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

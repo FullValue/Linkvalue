@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getPublicProfile } from "@/lib/profile-data";
-import { resolveStyles, type CustomStyles } from "@/lib/themes";
+import { resolveStyles } from "@/lib/themes";
+import { customStylesSchema } from "@/lib/validations/appearance";
 import { siteConfig } from "@/lib/site";
 
 export const size = { width: 1200, height: 630 };
@@ -18,17 +19,20 @@ export default async function Image({
   const data = await getPublicProfile(username);
   const profile = data?.profile;
 
+  const parsedStyles = customStylesSchema.safeParse(profile?.custom_styles ?? {});
   const styles = resolveStyles(
     profile?.theme_id ?? "noir",
-    (profile?.custom_styles ?? {}) as CustomStyles,
+    parsedStyles.success ? parsedStyles.data : {},
   );
   const background =
     styles.background.type === "gradient"
       ? `linear-gradient(${styles.background.angle}deg, ${styles.background.from}, ${styles.background.to})`
       : styles.background.color;
 
-  const name = profile?.display_name?.trim() || `@${profile?.username ?? "lumen"}`;
-  const bio = profile?.bio?.trim() || siteConfig.tagline;
+  const rawName = profile?.display_name?.trim() || `@${profile?.username ?? "lumen"}`;
+  const name = rawName.length > 40 ? `${rawName.slice(0, 39)}…` : rawName;
+  const rawBio = profile?.bio?.trim() || siteConfig.tagline;
+  const bio = rawBio.length > 120 ? `${rawBio.slice(0, 119)}…` : rawBio;
   const initial = name.replace(/^@/, "").charAt(0).toUpperCase();
 
   return new ImageResponse(

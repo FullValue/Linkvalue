@@ -39,7 +39,7 @@ export function BlockItem({ block }: { block: Block }) {
         <GripVertical className="size-4" />
       </button>
 
-      <div className="bg-secondary text-muted-foreground grid size-9 shrink-0 place-items-center rounded-lg">
+      <div className="bg-secondary text-muted-foreground hidden size-9 shrink-0 place-items-center rounded-lg sm:grid">
         {block.type === "embed" ? (
           <Play className="size-4" />
         ) : (

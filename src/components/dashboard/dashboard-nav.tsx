@@ -29,7 +29,7 @@ export function DashboardNav({
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-5">
         <Logo href="/dashboard" showWordmark={false} />
 
-        <nav className="bg-secondary/40 flex items-center gap-0.5 rounded-lg p-0.5">
+        <nav className="bg-secondary/40 flex min-w-0 [scrollbar-width:none] items-center gap-0.5 overflow-x-auto rounded-lg p-0.5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((t) => {
             const active =
               t.href === "/dashboard" ? pathname === t.href : pathname.startsWith(t.href);
@@ -39,7 +39,7 @@ export function DashboardNav({
                 href={t.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "focus-visible:ring-ring rounded-md px-3 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2",
+                  "focus-visible:ring-ring shrink-0 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2",
                   active
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",

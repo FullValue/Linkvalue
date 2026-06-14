@@ -16,6 +16,7 @@ export async function updateEmailAction(
   _prev: SettingsState,
   formData: FormData,
 ): Promise<SettingsState> {
+  if (!(await getCurrentUser())) return { error: "Not signed in" };
   const parsed = updateEmailSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors };
@@ -30,6 +31,7 @@ export async function updatePasswordAction(
   _prev: SettingsState,
   formData: FormData,
 ): Promise<SettingsState> {
+  if (!(await getCurrentUser())) return { error: "Not signed in" };
   const parsed = updatePasswordSchema.safeParse({
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),

@@ -24,7 +24,12 @@ const socialKeys = SOCIAL_PLATFORMS.map((s) => s.key) as [
 
 export const socialBlockSchema = z.object({
   platform: z.enum(socialKeys),
-  url: z.string().trim().min(1, "Required").max(2048),
+  url: z
+    .string()
+    .trim()
+    .min(1, "Required")
+    .max(2048)
+    .refine((u) => !/^\s*(javascript|data|vbscript):/i.test(u), "Unsupported URL"),
 });
 
 export const blockTypeSchema = z.enum(["link", "embed", "social"]);

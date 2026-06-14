@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getPublicProfile } from "@/lib/profile-data";
 import { ProfileView } from "@/components/profile/profile-view";
 import { PageViewTracker } from "@/components/profile/page-view-tracker";
-import { resolveStyles, type CustomStyles } from "@/lib/themes";
+import { resolveStyles } from "@/lib/themes";
+import { customStylesSchema } from "@/lib/validations/appearance";
 import { themeFontVars } from "@/lib/fonts";
 import { siteConfig } from "@/lib/site";
 
@@ -40,9 +41,12 @@ export default async function PublicProfilePage({ params }: Params) {
   if (!data) notFound();
 
   const { profile, blocks } = data;
+  // Re-validate stored styles at render: a direct PostgREST write could put
+  // arbitrary values in custom_styles; only known hex/enum fields are honoured.
+  const parsedStyles = customStylesSchema.safeParse(profile.custom_styles ?? {});
   const styles = resolveStyles(
     profile.theme_id,
-    (profile.custom_styles ?? {}) as CustomStyles,
+    parsedStyles.success ? parsedStyles.data : {},
   );
 
   return (
