@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, useCallback } from "react";
+import { createContext, useContext, useMemo, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import type { Block, BlockType } from "@/lib/supabase/types";
 import { resolveStyles, type CustomStyles, type ResolvedStyles } from "@/lib/themes";
@@ -12,6 +12,7 @@ import {
   reorderBlocksAction,
   updateProfileAction,
   setAvatarAction,
+  saveAppearanceAction,
   type Result,
 } from "@/app/(dashboard)/dashboard/actions";
 
@@ -36,6 +37,8 @@ interface BuilderApi {
   saveProfile: (values: { display_name: string; bio: string }) => Promise<Result>;
   setProfileLocal: (patch: Partial<BuilderProfile>) => void;
   setAvatar: (url: string | null) => Promise<void>;
+  setTheme: (themeId: string) => void;
+  updateStyles: (patch: Partial<CustomStyles>) => void;
 }
 
 const Ctx = createContext<BuilderApi | null>(null);
@@ -157,6 +160,34 @@ export function BuilderProvider({
     if (res.error) toast.error(res.error);
   }, []);
 
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistAppearance = useCallback((themeId: string, customStyles: CustomStyles) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      const res = await saveAppearanceAction(themeId, customStyles);
+      if (res.error) toast.error(res.error);
+    }, 500);
+  }, []);
+
+  const setTheme = useCallback(
+    (themeId: string) => {
+      setProfile((p) => ({ ...p, theme_id: themeId, custom_styles: {} }));
+      persistAppearance(themeId, {});
+    },
+    [persistAppearance],
+  );
+
+  const updateStyles = useCallback(
+    (patch: Partial<CustomStyles>) => {
+      setProfile((p) => {
+        const custom_styles = { ...p.custom_styles, ...patch };
+        persistAppearance(p.theme_id, custom_styles);
+        return { ...p, custom_styles };
+      });
+    },
+    [persistAppearance],
+  );
+
   const api = useMemo<BuilderApi>(
     () => ({
       profile,
@@ -170,6 +201,8 @@ export function BuilderProvider({
       saveProfile,
       setProfileLocal,
       setAvatar,
+      setTheme,
+      updateStyles,
     }),
     [
       profile,
@@ -183,6 +216,8 @@ export function BuilderProvider({
       saveProfile,
       setProfileLocal,
       setAvatar,
+      setTheme,
+      updateStyles,
     ],
   );
 

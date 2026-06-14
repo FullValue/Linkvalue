@@ -9,9 +9,10 @@ import {
   socialBlockSchema,
 } from "@/lib/validations/blocks";
 import { profileSchema } from "@/lib/validations/profile";
+import { appearanceSchema } from "@/lib/validations/appearance";
 import { detectEmbed } from "@/lib/embeds";
 import { SOCIAL_MAP } from "@/lib/socials";
-import type { Block, BlockType, Database } from "@/lib/supabase/types";
+import type { Block, BlockType, Database, Json } from "@/lib/supabase/types";
 
 type BlockInsert = Database["public"]["Tables"]["blocks"]["Insert"];
 type BlockUpdate = Database["public"]["Tables"]["blocks"]["Update"];
@@ -76,6 +77,29 @@ export async function setAvatarAction(url: string | null): Promise<Result> {
   const { error } = await ctx.supabase
     .from("profiles")
     .update({ avatar_url: url })
+    .eq("id", ctx.userId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard");
+  return {};
+}
+
+export async function saveAppearanceAction(
+  themeId: string,
+  customStyles: unknown,
+): Promise<Result> {
+  const ctx = await context();
+  if (!ctx) return { error: "Not signed in" };
+
+  const parsed = appearanceSchema.safeParse({ themeId, customStyles });
+  if (!parsed.success) return { error: "Invalid appearance settings" };
+
+  const { error } = await ctx.supabase
+    .from("profiles")
+    .update({
+      theme_id: parsed.data.themeId,
+      custom_styles: parsed.data.customStyles as unknown as Json,
+    })
     .eq("id", ctx.userId);
 
   if (error) return { error: error.message };
