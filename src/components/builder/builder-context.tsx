@@ -13,6 +13,8 @@ import {
   updateProfileAction,
   setAvatarAction,
   saveAppearanceAction,
+  setHeaderLayoutAction,
+  setBannerAction,
   type Result,
 } from "@/app/(dashboard)/dashboard/actions";
 
@@ -23,6 +25,8 @@ export interface BuilderProfile {
   avatar_url: string | null;
   theme_id: string;
   custom_styles: CustomStyles;
+  header_layout: string;
+  banner_url: string | null;
 }
 
 interface BuilderApi {
@@ -40,6 +44,8 @@ interface BuilderApi {
   setAvatar: (url: string | null) => Promise<void>;
   setTheme: (themeId: string) => void;
   updateStyles: (patch: Partial<CustomStyles>) => void;
+  setHeaderLayout: (layout: string) => void;
+  setBanner: (url: string | null) => Promise<void>;
 }
 
 const Ctx = createContext<BuilderApi | null>(null);
@@ -198,6 +204,33 @@ export function BuilderProvider({
     [persistAppearance],
   );
 
+  const setHeaderLayout = useCallback((layout: string) => {
+    let prev = "classic";
+    setProfile((p) => {
+      prev = p.header_layout;
+      return { ...p, header_layout: layout };
+    });
+    setHeaderLayoutAction(layout).then((res) => {
+      if (res.error) {
+        toast.error(res.error);
+        setProfile((p) => ({ ...p, header_layout: prev }));
+      }
+    });
+  }, []);
+
+  const setBanner = useCallback(async (url: string | null) => {
+    let prev: string | null = null;
+    setProfile((p) => {
+      prev = p.banner_url;
+      return { ...p, banner_url: url };
+    });
+    const res = await setBannerAction(url);
+    if (res.error) {
+      toast.error(res.error);
+      setProfile((p) => ({ ...p, banner_url: prev }));
+    }
+  }, []);
+
   const api = useMemo<BuilderApi>(
     () => ({
       userId,
@@ -214,6 +247,8 @@ export function BuilderProvider({
       setAvatar,
       setTheme,
       updateStyles,
+      setHeaderLayout,
+      setBanner,
     }),
     [
       userId,
@@ -230,6 +265,8 @@ export function BuilderProvider({
       setAvatar,
       setTheme,
       updateStyles,
+      setHeaderLayout,
+      setBanner,
     ],
   );
 

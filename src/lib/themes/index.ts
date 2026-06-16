@@ -5,18 +5,46 @@
  * with per-field overrides. `resolveStyles()` merges overrides on top of the
  * preset to produce a fully-specified style set the public renderer consumes.
  *
- * Phase 0 ships the type system + the default `noir` preset and one light preset
- * so the resolver is exercised end-to-end. Phase 3 fills out the full 4–6 set
- * and the dashboard controls.
+ * The header layout (`header_layout`) and banner image (`banner_url`) live as
+ * their own profile columns — they're structural, not part of the theme blob.
  */
 
 export type FontKey = "inter" | "fraunces" | "space-grotesk" | "geist-mono";
 
+/** Legacy single-axis button control (pre-Phase 10). Still read for back-compat. */
 export type ButtonShape = "rounded" | "pill" | "square" | "outline";
 
+/** Phase 10 button axes — style, corner radius and shadow are independent. */
+export type ButtonStyle = "solid" | "glass" | "outline";
+export type ButtonRadius = "square" | "round" | "rounder" | "full";
+export type ButtonShadow = "none" | "soft" | "strong" | "hard";
+
+export type PatternPreset = "dots" | "grid" | "stripes";
+
+/** Page wallpaper. `solid`/`gradient` are the originals; the rest are Phase 10. */
 export type BackgroundStyle =
   | { type: "solid"; color: string }
-  | { type: "gradient"; from: string; to: string; angle: number };
+  | { type: "gradient"; from: string; to: string; angle: number }
+  | { type: "image"; url: string; dim: number }
+  | { type: "pattern"; preset: PatternPreset; color: string; bg: string }
+  | { type: "blur"; from: string; to: string; base: string };
+
+/** Public profile header arrangement. Stored on `profiles.header_layout`. */
+export type HeaderLayout = "classic" | "hero" | "banner" | "cutout" | "shape";
+
+export const HEADER_LAYOUTS: readonly { id: HeaderLayout; name: string }[] = [
+  { id: "classic", name: "Classic" },
+  { id: "hero", name: "Hero" },
+  { id: "banner", name: "Banner" },
+  { id: "cutout", name: "Cutout" },
+  { id: "shape", name: "Shape" },
+] as const;
+
+export const DEFAULT_HEADER_LAYOUT: HeaderLayout = "classic";
+
+export function isHeaderLayout(v: unknown): v is HeaderLayout {
+  return HEADER_LAYOUTS.some((l) => l.id === v);
+}
 
 export interface CustomStyles {
   background?: BackgroundStyle;
@@ -25,7 +53,11 @@ export interface CustomStyles {
   textColor?: string;
   mutedTextColor?: string;
   font?: FontKey;
+  /** @deprecated superseded by buttonStyle/buttonRadius/buttonShadow. */
   buttonShape?: ButtonShape;
+  buttonStyle?: ButtonStyle;
+  buttonRadius?: ButtonRadius;
+  buttonShadow?: ButtonShadow;
 }
 
 /** Every field present — what the renderer actually paints with. */
@@ -35,7 +67,7 @@ export interface Theme {
   id: string;
   name: string;
   description: string;
-  /** Small swatch used in the dashboard theme picker (Phase 3). */
+  /** Small swatch used in the dashboard theme picker. */
   swatch: readonly [string, string, string];
   styles: ResolvedStyles;
 }
@@ -61,6 +93,9 @@ export const THEMES: readonly Theme[] = [
       mutedTextColor: "#a1a1aa",
       font: "inter",
       buttonShape: "rounded",
+      buttonStyle: "solid",
+      buttonRadius: "round",
+      buttonShadow: "soft",
     },
   },
   {
@@ -76,6 +111,9 @@ export const THEMES: readonly Theme[] = [
       mutedTextColor: "#6b6b66",
       font: "fraunces",
       buttonShape: "square",
+      buttonStyle: "solid",
+      buttonRadius: "square",
+      buttonShadow: "soft",
     },
   },
   {
@@ -91,6 +129,9 @@ export const THEMES: readonly Theme[] = [
       mutedTextColor: "#6b6480",
       font: "inter",
       buttonShape: "pill",
+      buttonStyle: "solid",
+      buttonRadius: "full",
+      buttonShadow: "soft",
     },
   },
   {
@@ -106,6 +147,9 @@ export const THEMES: readonly Theme[] = [
       mutedTextColor: "#ffe0f0",
       font: "space-grotesk",
       buttonShape: "rounded",
+      buttonStyle: "solid",
+      buttonRadius: "round",
+      buttonShadow: "strong",
     },
   },
   {
@@ -121,6 +165,9 @@ export const THEMES: readonly Theme[] = [
       mutedTextColor: "#4b7163",
       font: "inter",
       buttonShape: "rounded",
+      buttonStyle: "solid",
+      buttonRadius: "round",
+      buttonShadow: "soft",
     },
   },
   {
@@ -136,6 +183,9 @@ export const THEMES: readonly Theme[] = [
       mutedTextColor: "#8a8a93",
       font: "geist-mono",
       buttonShape: "square",
+      buttonStyle: "solid",
+      buttonRadius: "square",
+      buttonShadow: "none",
     },
   },
 ] as const;
@@ -153,10 +203,43 @@ function definedOnly<T extends object>(obj: T): Partial<T> {
   ) as Partial<T>;
 }
 
+/** Maps the legacy single-axis shape onto the new style/radius axes. */
+function shapeToAxes(shape: ButtonShape): {
+  style: ButtonStyle;
+  radius: ButtonRadius;
+} {
+  switch (shape) {
+    case "pill":
+      return { style: "solid", radius: "full" };
+    case "square":
+      return { style: "solid", radius: "square" };
+    case "outline":
+      return { style: "outline", radius: "round" };
+    default:
+      return { style: "solid", radius: "round" };
+  }
+}
+
 export function resolveStyles(
   themeId: string | null | undefined,
   custom: CustomStyles | null | undefined,
 ): ResolvedStyles {
   const base = getTheme(themeId).styles;
-  return { ...base, ...definedOnly(custom ?? {}) };
+  const c = definedOnly(custom ?? {});
+  const merged: ResolvedStyles = { ...base, ...c };
+
+  // Back-compat: a profile customised before Phase 10 only stored `buttonShape`.
+  // Derive the new axes from it so its look is preserved.
+  if (
+    c.buttonShape &&
+    c.buttonStyle === undefined &&
+    c.buttonRadius === undefined &&
+    c.buttonShadow === undefined
+  ) {
+    const axes = shapeToAxes(c.buttonShape);
+    merged.buttonStyle = axes.style;
+    merged.buttonRadius = axes.radius;
+  }
+
+  return merged;
 }

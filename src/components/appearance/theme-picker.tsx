@@ -15,7 +15,9 @@ export function ThemePicker() {
         const bg =
           t.styles.background.type === "gradient"
             ? `linear-gradient(${t.styles.background.angle}deg, ${t.styles.background.from}, ${t.styles.background.to})`
-            : t.styles.background.color;
+            : t.styles.background.type === "solid"
+              ? t.styles.background.color
+              : "#0a0a0b";
         return (
           <button
             key={t.id}

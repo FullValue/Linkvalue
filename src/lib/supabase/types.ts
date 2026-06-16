@@ -39,6 +39,8 @@ export interface Database {
           avatar_url: string | null;
           theme_id: string;
           custom_styles: Json;
+          header_layout: string;
+          banner_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -50,6 +52,8 @@ export interface Database {
           avatar_url?: string | null;
           theme_id?: string;
           custom_styles?: Json;
+          header_layout?: string;
+          banner_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -61,6 +65,8 @@ export interface Database {
           avatar_url?: string | null;
           theme_id?: string;
           custom_styles?: Json;
+          header_layout?: string;
+          banner_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };

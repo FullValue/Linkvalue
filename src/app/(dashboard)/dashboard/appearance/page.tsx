@@ -29,6 +29,8 @@ export default async function AppearancePage() {
         avatar_url: profile.avatar_url,
         theme_id: profile.theme_id,
         custom_styles: (profile.custom_styles ?? {}) as CustomStyles,
+        header_layout: profile.header_layout,
+        banner_url: profile.banner_url,
       }}
       initialBlocks={blocks ?? []}
     >

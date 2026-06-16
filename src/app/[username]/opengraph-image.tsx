@@ -24,10 +24,19 @@ export default async function Image({
     profile?.theme_id ?? "noir",
     parsedStyles.success ? parsedStyles.data : {},
   );
+  // The OG card is rendered server-side and can't load arbitrary wallpaper
+  // images/patterns, so fall back to a representative flat colour for those.
+  const bg = styles.background;
   const background =
-    styles.background.type === "gradient"
-      ? `linear-gradient(${styles.background.angle}deg, ${styles.background.from}, ${styles.background.to})`
-      : styles.background.color;
+    bg.type === "gradient"
+      ? `linear-gradient(${bg.angle}deg, ${bg.from}, ${bg.to})`
+      : bg.type === "solid"
+        ? bg.color
+        : bg.type === "blur"
+          ? `linear-gradient(150deg, ${bg.from}, ${bg.to})`
+          : bg.type === "pattern"
+            ? bg.bg
+            : "#0a0a0b";
 
   const rawName = profile?.display_name?.trim() || `@${profile?.username ?? "lumen"}`;
   const name = rawName.length > 40 ? `${rawName.slice(0, 39)}…` : rawName;

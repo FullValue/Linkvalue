@@ -12,7 +12,14 @@ export function LivePreview() {
       <div className="relative rounded-[2.6rem] border border-white/10 bg-black/40 p-2.5 shadow-2xl shadow-black/50 backdrop-blur">
         <div className="absolute top-4 left-1/2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-black/70" />
         <div className="h-[600px] [scrollbar-width:none] overflow-x-hidden overflow-y-auto rounded-[2.1rem] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <ProfileView profile={profile} blocks={blocks} styles={styles} mode="preview" />
+          <ProfileView
+            profile={profile}
+            blocks={blocks}
+            styles={styles}
+            mode="preview"
+            headerLayout={profile.header_layout}
+            bannerUrl={profile.banner_url}
+          />
         </div>
       </div>
     </div>

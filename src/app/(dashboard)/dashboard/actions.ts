@@ -19,6 +19,7 @@ import { appearanceSchema } from "@/lib/validations/appearance";
 import { detectEmbed } from "@/lib/embeds";
 import { SOCIAL_MAP } from "@/lib/socials";
 import { isOwnMediaUrl } from "@/lib/storage";
+import { isHeaderLayout } from "@/lib/themes";
 import type { Block, BlockType, Database, Json } from "@/lib/supabase/types";
 
 type BlockInsert = Database["public"]["Tables"]["blocks"]["Insert"];
@@ -161,6 +162,43 @@ export async function saveAppearanceAction(
       theme_id: parsed.data.themeId,
       custom_styles: parsed.data.customStyles as unknown as Json,
     })
+    .eq("id", ctx.userId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard");
+  return {};
+}
+
+export async function setHeaderLayoutAction(layout: string): Promise<Result> {
+  const ctx = await context();
+  if (!ctx) return { error: "Not signed in" };
+  if (!isHeaderLayout(layout)) return { error: "Invalid layout" };
+
+  const { error } = await ctx.supabase
+    .from("profiles")
+    .update({ header_layout: layout })
+    .eq("id", ctx.userId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard");
+  return {};
+}
+
+export async function setBannerAction(url: string | null): Promise<Result> {
+  const ctx = await context();
+  if (!ctx) return { error: "Not signed in" };
+
+  // Only the user's own media/<id>/ objects (or null). Mirrors setAvatarAction.
+  if (url !== null) {
+    const supabaseUrl = clientEnv().NEXT_PUBLIC_SUPABASE_URL;
+    if (!isOwnMediaUrl(url, supabaseUrl, ctx.userId)) {
+      return { error: "Invalid banner URL" };
+    }
+  }
+
+  const { error } = await ctx.supabase
+    .from("profiles")
+    .update({ banner_url: url })
     .eq("id", ctx.userId);
 
   if (error) return { error: error.message };

@@ -18,7 +18,9 @@ export function PhoneMock({ className }: { className?: string }) {
   const background =
     styles.background.type === "gradient"
       ? `linear-gradient(${styles.background.angle}deg, ${styles.background.from}, ${styles.background.to})`
-      : styles.background.color;
+      : styles.background.type === "solid"
+        ? styles.background.color
+        : "#0a0a0b";
 
   return (
     <div

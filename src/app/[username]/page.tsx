@@ -62,6 +62,8 @@ export default async function PublicProfilePage({ params }: Params) {
         mode="live"
         hrefFor={(block) => `/api/go/${block.id}`}
         viewerDevice={viewerDevice}
+        headerLayout={profile.header_layout}
+        bannerUrl={profile.banner_url}
       />
       <PageViewTracker username={profile.username} />
     </main>
