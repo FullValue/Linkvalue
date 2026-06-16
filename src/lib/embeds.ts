@@ -1,17 +1,17 @@
-export type EmbedProvider = "youtube" | "spotify";
+export type EmbedProvider = "youtube" | "spotify" | "tiktok";
 
 export interface EmbedInfo {
   provider: EmbedProvider;
-  /** Provider-specific id (YouTube video id / Spotify resource id). */
+  /** Provider-specific id (YouTube video id / Spotify resource id / TikTok video id). */
   id: string;
   embedUrl: string;
   /** Suggested aspect ratio for the iframe wrapper. */
-  aspect: "video" | "audio";
+  aspect: "video" | "audio" | "vertical";
 }
 
 /**
- * Detect a supported embed (YouTube / Spotify) from a pasted URL and return the
- * sandboxed embed URL. Returns null for anything unsupported.
+ * Detect a supported embed (YouTube / Spotify / TikTok) from a pasted URL and
+ * return the sandboxed embed URL. Returns null for anything unsupported.
  */
 export function detectEmbed(rawUrl: string): EmbedInfo | null {
   let url: URL;
@@ -49,6 +49,21 @@ export function detectEmbed(rawUrl: string): EmbedInfo | null {
         id: m[2],
         embedUrl: `https://open.spotify.com/embed/${m[1]}/${m[2]}`,
         aspect: "audio",
+      };
+    }
+  }
+
+  // TikTok — only the canonical /@user/video/<id> (and /video/<id>) forms carry
+  // the numeric id we need for the player. Short links (vm./vt.tiktok.com, /t/…)
+  // require a redirect lookup we don't do server-side, so they fall through.
+  if (host === "tiktok.com" || host === "m.tiktok.com") {
+    const m = url.pathname.match(/\/video\/(\d+)/);
+    if (m) {
+      return {
+        provider: "tiktok",
+        id: m[1],
+        embedUrl: `https://www.tiktok.com/player/v1/${m[1]}`,
+        aspect: "vertical",
       };
     }
   }

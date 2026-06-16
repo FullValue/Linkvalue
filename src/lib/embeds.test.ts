@@ -30,6 +30,19 @@ describe("detectEmbed — Spotify", () => {
   });
 });
 
+describe("detectEmbed — TikTok", () => {
+  it("parses a /@user/video/<id> URL into the player embed", () => {
+    const e = detectEmbed("https://www.tiktok.com/@scout/video/7212345678901234567");
+    expect(e?.provider).toBe("tiktok");
+    expect(e?.id).toBe("7212345678901234567");
+    expect(e?.embedUrl).toBe("https://www.tiktok.com/player/v1/7212345678901234567");
+    expect(e?.aspect).toBe("vertical");
+  });
+  it("does not resolve short links (no numeric id)", () => {
+    expect(detectEmbed("https://vm.tiktok.com/ZMabc123/")).toBeNull();
+  });
+});
+
 describe("detectEmbed — unsupported", () => {
   it("returns null for non-embeddable URLs", () => {
     expect(detectEmbed("https://example.com")).toBeNull();

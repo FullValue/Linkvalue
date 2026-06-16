@@ -1,10 +1,20 @@
 import { z } from "zod";
 import { SOCIAL_PLATFORMS, type SocialPlatform } from "@/lib/socials";
+import { GALLERY_MAX_IMAGES } from "@/lib/gallery";
 
 const urlField = z
   .url("Enter a valid URL (including https://)")
   .max(2048)
   .refine((u) => /^https?:\/\//i.test(u), "URL must start with http:// or https://");
+
+/** Optional outbound link: empty → undefined, otherwise must be http(s). */
+const optionalLinkField = z
+  .string()
+  .trim()
+  .max(2048)
+  .refine((u) => u === "" || /^https?:\/\//i.test(u), "Link must start with http:// or https://")
+  .transform((u) => (u === "" ? undefined : u))
+  .optional();
 
 export const linkBlockSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(120),
@@ -80,9 +90,36 @@ export const appDownloadBlockSchema = z
     path: ["ios_url"],
   });
 
-export const blockTypeSchema = z.enum(["link", "embed", "social", "app_download"]);
+/* -------------------------------------------------------------------------- */
+/* Gallery                                                                     */
+/* -------------------------------------------------------------------------- */
+
+export const galleryImageSchema = z.object({
+  // Uploaded objects always have a Supabase Storage URL; the action additionally
+  // pins each one to the owner's own media/<uid>/ folder.
+  url: urlField,
+  alt: z.string().trim().max(120).optional(),
+  link: optionalLinkField,
+});
+
+export const galleryBlockSchema = z.object({
+  layout: z.enum(["grid", "carousel"]).default("grid"),
+  images: z
+    .array(galleryImageSchema)
+    .min(1, "Add at least one image")
+    .max(GALLERY_MAX_IMAGES, `Up to ${GALLERY_MAX_IMAGES} images`),
+});
+
+export const blockTypeSchema = z.enum([
+  "link",
+  "embed",
+  "social",
+  "app_download",
+  "gallery",
+]);
 
 export type LinkBlockInput = z.infer<typeof linkBlockSchema>;
 export type EmbedBlockInput = z.infer<typeof embedBlockSchema>;
 export type SocialBlockInput = z.infer<typeof socialBlockSchema>;
 export type AppDownloadBlockInput = z.infer<typeof appDownloadBlockSchema>;
+export type GalleryBlockInput = z.infer<typeof galleryBlockSchema>;

@@ -70,7 +70,7 @@ export function BlockDialog({
             </DialogTitle>
             <DialogDescription>
               {kind === "embed"
-                ? "Paste a YouTube or Spotify link — it plays right on your page."
+                ? "Paste a YouTube, Spotify or TikTok link — it plays right on your page."
                 : "Add a title and the URL it points to."}
             </DialogDescription>
           </DialogHeader>
@@ -116,7 +116,7 @@ export function BlockDialog({
             ) : (
               <>
                 <div className="grid gap-2">
-                  <Label htmlFor="b-url">YouTube or Spotify URL</Label>
+                  <Label htmlFor="b-url">YouTube, Spotify or TikTok URL</Label>
                   <Input
                     id="b-url"
                     value={url}

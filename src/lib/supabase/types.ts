@@ -17,7 +17,7 @@ export type Json =
   | Json[];
 
 /** Block discriminator. Kept in sync with the `blocks.type` CHECK constraint. */
-export type BlockType = "link" | "embed" | "social" | "app_download";
+export type BlockType = "link" | "embed" | "social" | "app_download" | "gallery";
 
 export interface Database {
   public: {

@@ -5,9 +5,12 @@ import { FONT_STACK } from "@/lib/font-stack";
 import { detectEmbed } from "@/lib/embeds";
 import { socialHref, type SocialPlatform } from "@/lib/socials";
 import { readAppDownloadMeta, type Device } from "@/lib/app-download";
+import { readGalleryMeta } from "@/lib/gallery";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { YouTubeEmbed } from "@/components/profile/youtube-embed";
+import { TikTokEmbed } from "@/components/profile/tiktok-embed";
 import { AppDownloadBlock } from "@/components/profile/app-download-block";
+import { ImageGalleryBlock } from "@/components/profile/image-gallery-block";
 import { siteConfig } from "@/lib/site";
 
 export interface ProfileViewProfile {
@@ -44,7 +47,11 @@ export function ProfileView({
   const socials = active.filter((b) => b.type === "social").sort(byPosition);
   const content = active
     .filter(
-      (b) => b.type === "link" || b.type === "embed" || b.type === "app_download",
+      (b) =>
+        b.type === "link" ||
+        b.type === "embed" ||
+        b.type === "app_download" ||
+        b.type === "gallery",
     )
     .sort(byPosition);
 
@@ -148,6 +155,17 @@ export function ProfileView({
                   blockId={block.id}
                   meta={readAppDownloadMeta(block.meta)}
                   device={viewerDevice}
+                  mode={mode}
+                  styles={styles}
+                />
+              );
+            }
+            if (block.type === "gallery") {
+              return (
+                <ImageGalleryBlock
+                  key={block.id}
+                  blockId={block.id}
+                  meta={readGalleryMeta(block.meta)}
                   mode={mode}
                   styles={styles}
                 />
@@ -258,6 +276,11 @@ function EmbedBlock({
   // YouTube: show the thumbnail, load the player only on click (preview + live).
   if (embed.provider === "youtube") {
     return <YouTubeEmbed id={embed.id} title={block.title} embedUrl={embed.embedUrl} />;
+  }
+
+  // TikTok: branded facade, loads the vertical player only on click.
+  if (embed.provider === "tiktok") {
+    return <TikTokEmbed title={block.title} embedUrl={embed.embedUrl} />;
   }
 
   // Spotify: compact player (already shows cover art + play control).

@@ -9,11 +9,13 @@ import {
   embedBlockSchema,
   socialBlockSchema,
   appDownloadBlockSchema,
+  galleryBlockSchema,
 } from "@/lib/validations/blocks";
 import { profileSchema } from "@/lib/validations/profile";
 import { appearanceSchema } from "@/lib/validations/appearance";
 import { detectEmbed } from "@/lib/embeds";
 import { SOCIAL_MAP } from "@/lib/socials";
+import { isOwnMediaUrl } from "@/lib/storage";
 import type { Block, BlockType, Database, Json } from "@/lib/supabase/types";
 
 type BlockInsert = Database["public"]["Tables"]["blocks"]["Insert"];
@@ -44,6 +46,35 @@ async function nextPosition(
     .limit(1)
     .maybeSingle();
   return (data?.position ?? -1) + 1;
+}
+
+/**
+ * Validate gallery input and build its `meta`. Each image URL must live in the
+ * owner's own media/<uid>/ Storage folder — the only place the uploader writes —
+ * so a gallery can't be turned into an arbitrary off-site image embed.
+ */
+function buildGalleryMeta(
+  values: unknown,
+  userId: string,
+): { meta: Json } | { fieldErrors: Record<string, string[] | undefined> } {
+  const p = galleryBlockSchema.safeParse(values);
+  if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+
+  const supabaseUrl = clientEnv().NEXT_PUBLIC_SUPABASE_URL;
+  if (p.data.images.some((im) => !isOwnMediaUrl(im.url, supabaseUrl, userId))) {
+    return { fieldErrors: { images: ["Images must be uploaded here"] } };
+  }
+
+  return {
+    meta: {
+      layout: p.data.layout,
+      images: p.data.images.map((im) => ({
+        url: im.url,
+        alt: im.alt ?? null,
+        link: im.link ?? null,
+      })),
+    },
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -146,13 +177,20 @@ export async function createBlockAction(
     if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
     const embed = detectEmbed(p.data.url);
     if (!embed) {
-      return { fieldErrors: { url: ["Only YouTube and Spotify links are supported"] } };
+      return {
+        fieldErrors: { url: ["Only YouTube, Spotify and TikTok links are supported"] },
+      };
     }
     insert = {
       profile_id: ctx.userId,
       type,
       title:
-        p.data.title?.trim() || (embed.provider === "youtube" ? "YouTube" : "Spotify"),
+        p.data.title?.trim() ||
+        (embed.provider === "youtube"
+          ? "YouTube"
+          : embed.provider === "tiktok"
+            ? "TikTok"
+            : "Spotify"),
       url: p.data.url,
       meta: { provider: embed.provider },
     };
@@ -166,7 +204,7 @@ export async function createBlockAction(
       url: p.data.url,
       meta: { platform: p.data.platform },
     };
-  } else {
+  } else if (type === "app_download") {
     const p = appDownloadBlockSchema.safeParse(values);
     if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
     insert = {
@@ -183,6 +221,12 @@ export async function createBlockAction(
         heading: p.data.heading?.trim() || null,
       },
     };
+  } else if (type === "gallery") {
+    const built = buildGalleryMeta(values, ctx.userId);
+    if ("fieldErrors" in built) return { fieldErrors: built.fieldErrors };
+    insert = { profile_id: ctx.userId, type, title: null, url: null, meta: built.meta };
+  } else {
+    return { error: "Unsupported block type" };
   }
 
   insert.position = await nextPosition(ctx.supabase, ctx.userId);
@@ -217,12 +261,19 @@ export async function updateBlockAction(
     if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
     const embed = detectEmbed(p.data.url);
     if (!embed) {
-      return { fieldErrors: { url: ["Only YouTube and Spotify links are supported"] } };
+      return {
+        fieldErrors: { url: ["Only YouTube, Spotify and TikTok links are supported"] },
+      };
     }
     patch = {
       url: p.data.url,
       title:
-        p.data.title?.trim() || (embed.provider === "youtube" ? "YouTube" : "Spotify"),
+        p.data.title?.trim() ||
+        (embed.provider === "youtube"
+          ? "YouTube"
+          : embed.provider === "tiktok"
+            ? "TikTok"
+            : "Spotify"),
       meta: { provider: embed.provider },
     };
   } else if (type === "social") {
@@ -233,7 +284,7 @@ export async function updateBlockAction(
       title: SOCIAL_MAP[p.data.platform].label,
       meta: { platform: p.data.platform },
     };
-  } else {
+  } else if (type === "app_download") {
     const p = appDownloadBlockSchema.safeParse(values);
     if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
     patch = {
@@ -248,6 +299,12 @@ export async function updateBlockAction(
         heading: p.data.heading?.trim() || null,
       },
     };
+  } else if (type === "gallery") {
+    const built = buildGalleryMeta(values, ctx.userId);
+    if ("fieldErrors" in built) return { fieldErrors: built.fieldErrors };
+    patch = { url: null, title: null, meta: built.meta };
+  } else {
+    return { error: "Unsupported block type" };
   }
 
   const { data, error } = await ctx.supabase

@@ -3,13 +3,18 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Trash2, Link2, Play, Smartphone } from "lucide-react";
+import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBuilder } from "./builder-context";
-import { BlockDialog } from "./block-dialog";
-import { AppDownloadDialog } from "./app-download-dialog";
+import {
+  BlockEditor,
+  BlockIcon,
+  blockSubtitle,
+  blockTitle,
+  isContentBlock,
+} from "./block-types";
 import type { Block } from "@/lib/supabase/types";
 
 export function BlockItem({ block }: { block: Block }) {
@@ -18,8 +23,7 @@ export function BlockItem({ block }: { block: Block }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: block.id });
 
-  const isApp = block.type === "app_download";
-  const kind = block.type === "embed" ? "embed" : "link";
+  const subtitle = blockSubtitle(block);
 
   return (
     <div
@@ -42,22 +46,14 @@ export function BlockItem({ block }: { block: Block }) {
       </button>
 
       <div className="bg-secondary text-muted-foreground hidden size-9 shrink-0 place-items-center rounded-lg sm:grid">
-        {block.type === "embed" ? (
-          <Play className="size-4" />
-        ) : isApp ? (
-          <Smartphone className="size-4" />
-        ) : (
-          <Link2 className="size-4" />
-        )}
+        <BlockIcon type={block.type} className="size-4" />
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">
-          {block.title || (isApp ? "App download" : "")}
-        </p>
-        <p className="text-muted-foreground truncate text-xs">
-          {isApp ? "App Store / Google Play" : block.url}
-        </p>
+        <p className="truncate text-sm font-medium">{blockTitle(block)}</p>
+        {subtitle ? (
+          <p className="text-muted-foreground truncate text-xs">{subtitle}</p>
+        ) : null}
       </div>
 
       <Switch
@@ -84,12 +80,9 @@ export function BlockItem({ block }: { block: Block }) {
         <Trash2 className="size-4" />
       </Button>
 
-      {editing &&
-        (isApp ? (
-          <AppDownloadDialog block={block} onClose={() => setEditing(false)} />
-        ) : (
-          <BlockDialog kind={kind} block={block} onClose={() => setEditing(false)} />
-        ))}
+      {editing && isContentBlock(block.type) && (
+        <BlockEditor type={block.type} block={block} onClose={() => setEditing(false)} />
+      )}
     </div>
   );
 }

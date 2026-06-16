@@ -21,6 +21,7 @@ export default async function AppearancePage() {
 
   return (
     <BuilderProvider
+      userId={profile.id}
       initialProfile={{
         username: profile.username,
         display_name: profile.display_name,

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readGalleryMeta } from "@/lib/gallery";
 
 /**
  * Click-tracking redirect. The public page points link buttons here; we record
@@ -35,6 +36,13 @@ export async function GET(
     else if (store === "android") target = m.android_url;
     else target = null;
     if (store === "ios" || store === "android") clickMeta = { store };
+  } else if (block.type === "gallery") {
+    // Gallery images carry their own optional link; ?i= selects which one.
+    const i = Number(request.nextUrl.searchParams.get("i"));
+    const { images } = readGalleryMeta(block.meta);
+    const image = Number.isInteger(i) && i >= 0 ? images[i] : undefined;
+    target = image?.link ?? null;
+    if (image?.link) clickMeta = { image: String(i) };
   }
 
   if (!target) {
@@ -54,8 +62,13 @@ export async function GET(
 
   const res = NextResponse.redirect(dest.toString(), 302);
 
-  // Per-store cookie so iOS and Android clicks are counted independently.
-  const cookieName = `lk_c_${block.id}${clickMeta.store ? `_${clickMeta.store}` : ""}`;
+  // Per-target cookie so distinct stores / gallery images count independently.
+  const suffix = clickMeta.store
+    ? `_${clickMeta.store}`
+    : clickMeta.image
+      ? `_i${clickMeta.image}`
+      : "";
+  const cookieName = `lk_c_${block.id}${suffix}`;
   if (!request.cookies.get(cookieName)) {
     await admin
       .from("clicks")

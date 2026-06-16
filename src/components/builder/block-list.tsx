@@ -20,12 +20,13 @@ import { Link2 } from "lucide-react";
 import { useBuilder } from "./builder-context";
 import { BlockItem } from "./block-item";
 import { AddBlock } from "./add-block";
+import { isContentBlock } from "./block-types";
 import { EmptyState } from "@/components/dashboard/empty-state";
 
 export function BlockList() {
   const { blocks, reorder } = useBuilder();
   const content = blocks
-    .filter((b) => b.type === "link" || b.type === "embed")
+    .filter((b) => isContentBlock(b.type))
     .sort((a, b) => a.position - b.position);
   const ids = content.map((b) => b.id);
 
@@ -47,9 +48,7 @@ export function BlockList() {
     <section className="bg-card rounded-2xl border p-5">
       <header className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="font-heading text-sm font-semibold tracking-tight">
-            Links &amp; embeds
-          </h2>
+          <h2 className="font-heading text-sm font-semibold tracking-tight">Blocks</h2>
           <p className="text-muted-foreground text-xs">
             Drag to reorder. Toggle to show or hide.
           </p>
@@ -61,7 +60,7 @@ export function BlockList() {
         <EmptyState
           icon={Link2}
           title="No blocks yet"
-          description="Add your first link or embed to start building your page."
+          description="Add your first block to start building your page."
           className="py-10"
         />
       ) : (

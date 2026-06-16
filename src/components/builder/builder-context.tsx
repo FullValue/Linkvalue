@@ -26,6 +26,7 @@ export interface BuilderProfile {
 }
 
 interface BuilderApi {
+  userId: string;
   profile: BuilderProfile;
   blocks: Block[];
   styles: ResolvedStyles;
@@ -50,10 +51,12 @@ export function useBuilder(): BuilderApi {
 }
 
 export function BuilderProvider({
+  userId,
   initialProfile,
   initialBlocks,
   children,
 }: {
+  userId: string;
   initialProfile: BuilderProfile;
   initialBlocks: Block[];
   children: React.ReactNode;
@@ -197,6 +200,7 @@ export function BuilderProvider({
 
   const api = useMemo<BuilderApi>(
     () => ({
+      userId,
       profile,
       blocks,
       styles,
@@ -212,6 +216,7 @@ export function BuilderProvider({
       updateStyles,
     }),
     [
+      userId,
       profile,
       blocks,
       styles,

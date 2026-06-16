@@ -17,7 +17,7 @@ export function Builder({
   blocks: Block[];
 }) {
   return (
-    <BuilderProvider initialProfile={profile} initialBlocks={blocks}>
+    <BuilderProvider userId={userId} initialProfile={profile} initialBlocks={blocks}>
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-5 lg:grid-cols-[1fr_340px]">
         <div className="flex min-w-0 flex-col gap-5">
           <ProfileEditor userId={userId} />
