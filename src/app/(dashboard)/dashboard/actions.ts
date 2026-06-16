@@ -10,6 +10,9 @@ import {
   socialBlockSchema,
   appDownloadBlockSchema,
   galleryBlockSchema,
+  textBlockSchema,
+  headerBlockSchema,
+  emailSignupBlockSchema,
 } from "@/lib/validations/blocks";
 import { profileSchema } from "@/lib/validations/profile";
 import { appearanceSchema } from "@/lib/validations/appearance";
@@ -74,6 +77,23 @@ function buildGalleryMeta(
         link: im.link ?? null,
       })),
     },
+  };
+}
+
+/** Normalize parsed email_signup input into its stored `meta` shape. */
+function emailSignupMeta(d: {
+  heading?: string;
+  description?: string;
+  fields: "email" | "email_phone";
+  button_label?: string;
+  success_message?: string;
+}): Json {
+  return {
+    heading: d.heading?.trim() || null,
+    description: d.description?.trim() || null,
+    fields: d.fields,
+    button_label: d.button_label?.trim() || null,
+    success_message: d.success_message?.trim() || null,
   };
 }
 
@@ -225,6 +245,30 @@ export async function createBlockAction(
     const built = buildGalleryMeta(values, ctx.userId);
     if ("fieldErrors" in built) return { fieldErrors: built.fieldErrors };
     insert = { profile_id: ctx.userId, type, title: null, url: null, meta: built.meta };
+  } else if (type === "text") {
+    const p = textBlockSchema.safeParse(values);
+    if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+    insert = {
+      profile_id: ctx.userId,
+      type,
+      title: p.data.heading?.trim() || null,
+      url: null,
+      meta: { body: p.data.body?.trim() || null },
+    };
+  } else if (type === "header") {
+    const p = headerBlockSchema.safeParse(values);
+    if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+    insert = { profile_id: ctx.userId, type, title: p.data.title, url: null, meta: {} };
+  } else if (type === "email_signup") {
+    const p = emailSignupBlockSchema.safeParse(values);
+    if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+    insert = {
+      profile_id: ctx.userId,
+      type,
+      title: p.data.heading?.trim() || null,
+      url: null,
+      meta: emailSignupMeta(p.data),
+    };
   } else {
     return { error: "Unsupported block type" };
   }
@@ -303,6 +347,22 @@ export async function updateBlockAction(
     const built = buildGalleryMeta(values, ctx.userId);
     if ("fieldErrors" in built) return { fieldErrors: built.fieldErrors };
     patch = { url: null, title: null, meta: built.meta };
+  } else if (type === "text") {
+    const p = textBlockSchema.safeParse(values);
+    if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+    patch = {
+      url: null,
+      title: p.data.heading?.trim() || null,
+      meta: { body: p.data.body?.trim() || null },
+    };
+  } else if (type === "header") {
+    const p = headerBlockSchema.safeParse(values);
+    if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+    patch = { url: null, title: p.data.title, meta: {} };
+  } else if (type === "email_signup") {
+    const p = emailSignupBlockSchema.safeParse(values);
+    if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+    patch = { url: null, title: p.data.heading?.trim() || null, meta: emailSignupMeta(p.data) };
   } else {
     return { error: "Unsupported block type" };
   }

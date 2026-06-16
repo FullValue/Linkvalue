@@ -12,6 +12,7 @@ const tabs = [
   { href: "/dashboard", label: "Builder" },
   { href: "/dashboard/appearance", label: "Appearance" },
   { href: "/dashboard/analytics", label: "Analytics" },
+  { href: "/dashboard/contacts", label: "Contacts" },
 ];
 
 export function DashboardNav({

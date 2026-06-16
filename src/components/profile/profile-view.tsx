@@ -6,11 +6,13 @@ import { detectEmbed } from "@/lib/embeds";
 import { socialHref, type SocialPlatform } from "@/lib/socials";
 import { readAppDownloadMeta, type Device } from "@/lib/app-download";
 import { readGalleryMeta } from "@/lib/gallery";
+import { readTextMeta, readEmailSignupMeta } from "@/lib/block-content";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { YouTubeEmbed } from "@/components/profile/youtube-embed";
 import { TikTokEmbed } from "@/components/profile/tiktok-embed";
 import { AppDownloadBlock } from "@/components/profile/app-download-block";
 import { ImageGalleryBlock } from "@/components/profile/image-gallery-block";
+import { EmailSignupBlock } from "@/components/profile/email-signup-block";
 import { siteConfig } from "@/lib/site";
 
 export interface ProfileViewProfile {
@@ -46,13 +48,7 @@ export function ProfileView({
   const active = blocks.filter((b) => b.is_active);
   const socials = active.filter((b) => b.type === "social").sort(byPosition);
   const content = active
-    .filter(
-      (b) =>
-        b.type === "link" ||
-        b.type === "embed" ||
-        b.type === "app_download" ||
-        b.type === "gallery",
-    )
+    .filter((b) => b.type !== "social")
     .sort(byPosition);
 
   const background =
@@ -171,6 +167,31 @@ export function ProfileView({
                 />
               );
             }
+            if (block.type === "header") {
+              return <HeaderBlock key={block.id} title={block.title} styles={styles} />;
+            }
+            if (block.type === "text") {
+              return (
+                <TextBlock
+                  key={block.id}
+                  heading={block.title}
+                  body={readTextMeta(block.meta).body}
+                  styles={styles}
+                />
+              );
+            }
+            if (block.type === "email_signup") {
+              return (
+                <EmailSignupBlock
+                  key={block.id}
+                  blockId={block.id}
+                  username={profile.username}
+                  meta={readEmailSignupMeta(block.meta)}
+                  mode={mode}
+                  styles={styles}
+                />
+              );
+            }
             return (
               <LinkButton
                 key={block.id}
@@ -252,6 +273,53 @@ function LinkButton({
     <a className={className} style={style} href={href} rel="noopener noreferrer">
       {inner}
     </a>
+  );
+}
+
+function HeaderBlock({
+  title,
+  styles,
+}: {
+  title: string | null;
+  styles: ResolvedStyles;
+}) {
+  if (!title?.trim()) return null;
+  return (
+    <h2
+      className="mt-2 border-b pb-1.5 text-left text-sm font-semibold tracking-wide uppercase first:mt-0"
+      style={{ color: styles.textColor, borderColor: `${styles.mutedTextColor}40` }}
+    >
+      {title}
+    </h2>
+  );
+}
+
+function TextBlock({
+  heading,
+  body,
+  styles,
+}: {
+  heading: string | null;
+  body: string | null;
+  styles: ResolvedStyles;
+}) {
+  if (!heading?.trim() && !body?.trim()) return null;
+  return (
+    <div className="flex flex-col gap-1 text-center">
+      {heading?.trim() ? (
+        <p className="text-base font-semibold" style={{ color: styles.textColor }}>
+          {heading}
+        </p>
+      ) : null}
+      {body?.trim() ? (
+        <p
+          className="text-sm leading-relaxed whitespace-pre-line"
+          style={{ color: styles.mutedTextColor }}
+        >
+          {body}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

@@ -1,12 +1,25 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { Images, Link2, Play, Smartphone, Video } from "lucide-react";
+import {
+  Heading,
+  Images,
+  Link2,
+  MailPlus,
+  Play,
+  Smartphone,
+  Type,
+  Video,
+} from "lucide-react";
 import type { Block, BlockType } from "@/lib/supabase/types";
 import { readGalleryMeta } from "@/lib/gallery";
+import { readEmailSignupMeta, readTextMeta } from "@/lib/block-content";
 import { BlockDialog } from "./block-dialog";
 import { AppDownloadDialog } from "./app-download-dialog";
 import { GalleryDialog } from "./gallery-dialog";
+import { TextDialog } from "./text-dialog";
+import { HeaderDialog } from "./header-dialog";
+import { EmailSignupDialog } from "./email-signup-dialog";
 
 /**
  * Single registry for the builder's content block types: what the "Add" menu
@@ -22,6 +35,9 @@ export const CONTENT_BLOCK_TYPES = [
   "embed",
   "gallery",
   "app_download",
+  "text",
+  "header",
+  "email_signup",
 ] as const satisfies readonly BlockType[];
 
 export type ContentBlockType = (typeof CONTENT_BLOCK_TYPES)[number];
@@ -58,6 +74,19 @@ export const ADD_BLOCK_OPTIONS: AddOption[] = [
     description: "App Store / Google Play",
     icon: Smartphone,
   },
+  { type: "text", label: "Text", description: "A heading and paragraph", icon: Type },
+  {
+    type: "header",
+    label: "Section header",
+    description: "Group blocks under a title",
+    icon: Heading,
+  },
+  {
+    type: "email_signup",
+    label: "Signup form",
+    description: "Collect emails or phone numbers",
+    icon: MailPlus,
+  },
 ];
 
 const LIST_ICON: Partial<Record<BlockType, LucideIcon>> = {
@@ -65,6 +94,9 @@ const LIST_ICON: Partial<Record<BlockType, LucideIcon>> = {
   embed: Play,
   gallery: Images,
   app_download: Smartphone,
+  text: Type,
+  header: Heading,
+  email_signup: MailPlus,
 };
 
 export function BlockIcon({ type, className }: { type: BlockType; className?: string }) {
@@ -77,6 +109,9 @@ const DEFAULT_TITLE: Partial<Record<BlockType, string>> = {
   embed: "Embed",
   gallery: "Gallery",
   app_download: "App download",
+  text: "Text",
+  header: "Section header",
+  email_signup: "Signup form",
 };
 
 export function blockTitle(block: Block): string {
@@ -91,6 +126,14 @@ export function blockSubtitle(block: Block): string {
       const { images, layout } = readGalleryMeta(block.meta);
       return `${images.length} image${images.length === 1 ? "" : "s"} · ${layout}`;
     }
+    case "text":
+      return readTextMeta(block.meta).body ?? "";
+    case "header":
+      return "Section header";
+    case "email_signup":
+      return readEmailSignupMeta(block.meta).fields === "email_phone"
+        ? "Email + phone"
+        : "Email";
     default:
       return block.url ?? "";
   }
@@ -108,5 +151,9 @@ export function BlockEditor({
 }) {
   if (type === "app_download") return <AppDownloadDialog block={block} onClose={onClose} />;
   if (type === "gallery") return <GalleryDialog block={block} onClose={onClose} />;
+  if (type === "text") return <TextDialog block={block} onClose={onClose} />;
+  if (type === "header") return <HeaderDialog block={block} onClose={onClose} />;
+  if (type === "email_signup")
+    return <EmailSignupDialog block={block} onClose={onClose} />;
   return <BlockDialog kind={type} block={block} onClose={onClose} />;
 }

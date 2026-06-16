@@ -110,12 +110,57 @@ export const galleryBlockSchema = z.object({
     .max(GALLERY_MAX_IMAGES, `Up to ${GALLERY_MAX_IMAGES} images`),
 });
 
+/* -------------------------------------------------------------------------- */
+/* Text & Header                                                               */
+/* -------------------------------------------------------------------------- */
+
+export const textBlockSchema = z
+  .object({
+    heading: z.string().trim().max(120).optional(),
+    body: z.string().trim().max(2000).optional(),
+  })
+  .refine((v) => Boolean(v.heading?.trim() || v.body?.trim()), {
+    message: "Add a heading or some text",
+    path: ["body"],
+  });
+
+export const headerBlockSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(80),
+});
+
+/* -------------------------------------------------------------------------- */
+/* Email / SMS signup                                                          */
+/* -------------------------------------------------------------------------- */
+
+export const emailSignupBlockSchema = z.object({
+  heading: z.string().trim().max(120).optional(),
+  description: z.string().trim().max(300).optional(),
+  fields: z.enum(["email", "email_phone"]).default("email"),
+  button_label: z.string().trim().max(40).optional(),
+  success_message: z.string().trim().max(160).optional(),
+});
+
+/** Public submission from an email_signup form on a profile page. */
+export const contactSubmitSchema = z.object({
+  email: z.email("Enter a valid email").max(320),
+  phone: z
+    .string()
+    .trim()
+    .max(40)
+    .refine((p) => p === "" || /^[+()\d][\d\s().-]{4,}$/.test(p), "Enter a valid phone number")
+    .transform((p) => (p === "" ? undefined : p))
+    .optional(),
+});
+
 export const blockTypeSchema = z.enum([
   "link",
   "embed",
   "social",
   "app_download",
   "gallery",
+  "text",
+  "header",
+  "email_signup",
 ]);
 
 export type LinkBlockInput = z.infer<typeof linkBlockSchema>;
@@ -123,3 +168,6 @@ export type EmbedBlockInput = z.infer<typeof embedBlockSchema>;
 export type SocialBlockInput = z.infer<typeof socialBlockSchema>;
 export type AppDownloadBlockInput = z.infer<typeof appDownloadBlockSchema>;
 export type GalleryBlockInput = z.infer<typeof galleryBlockSchema>;
+export type TextBlockInput = z.infer<typeof textBlockSchema>;
+export type HeaderBlockInput = z.infer<typeof headerBlockSchema>;
+export type EmailSignupBlockInput = z.infer<typeof emailSignupBlockSchema>;

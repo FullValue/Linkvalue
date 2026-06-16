@@ -17,7 +17,15 @@ export type Json =
   | Json[];
 
 /** Block discriminator. Kept in sync with the `blocks.type` CHECK constraint. */
-export type BlockType = "link" | "embed" | "social" | "app_download" | "gallery";
+export type BlockType =
+  | "link"
+  | "embed"
+  | "social"
+  | "app_download"
+  | "gallery"
+  | "text"
+  | "header"
+  | "email_signup";
 
 export interface Database {
   public: {
@@ -169,6 +177,46 @@ export interface Database {
           },
         ];
       };
+      contacts: {
+        Row: {
+          id: string;
+          profile_id: string;
+          source_block_id: string | null;
+          email: string | null;
+          phone: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          source_block_id?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          source_block_id?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contacts_profile_id_fkey";
+            columns: ["profile_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contacts_source_block_id_fkey";
+            columns: ["source_block_id"];
+            referencedRelation: "blocks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<never, never>;
     Functions: {
@@ -193,3 +241,4 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Block = Database["public"]["Tables"]["blocks"]["Row"];
 export type Click = Database["public"]["Tables"]["clicks"]["Row"];
 export type PageView = Database["public"]["Tables"]["page_views"]["Row"];
+export type Contact = Database["public"]["Tables"]["contacts"]["Row"];
