@@ -179,6 +179,7 @@ export async function createBlockAction(
         android_url: p.data.android_url ?? null,
         display_mode: p.data.display_mode,
         badge_variant: p.data.badge_variant,
+        layout: p.data.layout,
         heading: p.data.heading?.trim() || null,
       },
     };
@@ -243,6 +244,7 @@ export async function updateBlockAction(
         android_url: p.data.android_url ?? null,
         display_mode: p.data.display_mode,
         badge_variant: p.data.badge_variant,
+        layout: p.data.layout,
         heading: p.data.heading?.trim() || null,
       },
     };

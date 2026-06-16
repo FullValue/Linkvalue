@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { cn } from "@/lib/utils";
 import type { ResolvedStyles } from "@/lib/themes";
 import {
   badgesToShow,
@@ -59,7 +60,12 @@ export function AppDownloadBlock({
           {meta.heading}
         </p>
       ) : null}
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div
+        className={cn(
+          "flex flex-wrap items-center justify-center gap-3",
+          meta.layout === "row" ? "flex-row" : "flex-col",
+        )}
+      >
         {stores.map((s) => {
           const badge = BADGE[s](meta.badge_variant);
           const img = (

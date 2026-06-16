@@ -6,11 +6,14 @@
 export type StoreKey = "ios" | "android";
 export type Device = "ios" | "android" | "desktop";
 
+export type BadgeLayout = "stack" | "row";
+
 export interface AppDownloadMeta {
   ios_url: string | null;
   android_url: string | null;
   display_mode: "auto" | "both";
   badge_variant: "black" | "white";
+  layout: BadgeLayout;
   heading: string | null;
 }
 
@@ -22,6 +25,7 @@ export function readAppDownloadMeta(meta: unknown): AppDownloadMeta {
     android_url: typeof m.android_url === "string" ? m.android_url : null,
     display_mode: m.display_mode === "both" ? "both" : "auto",
     badge_variant: m.badge_variant === "white" ? "white" : "black",
+    layout: m.layout === "row" ? "row" : "stack",
     heading: typeof m.heading === "string" ? m.heading : null,
   };
 }

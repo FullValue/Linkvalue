@@ -69,6 +69,7 @@ export function AppDownloadDialog({
   const [badgeVariant, setBadgeVariant] = useState<"black" | "white">(
     initial.badge_variant,
   );
+  const [layout, setLayout] = useState<"stack" | "row">(initial.layout);
   const [errors, setErrors] = useState<Record<string, string[] | undefined>>({});
   const [pending, setPending] = useState(false);
 
@@ -87,6 +88,7 @@ export function AppDownloadDialog({
       android_url: androidUrl,
       display_mode: displayMode,
       badge_variant: badgeVariant,
+      layout,
     };
     const res = editing
       ? await updateBlock(block!.id, "app_download", values)
@@ -173,10 +175,23 @@ export function AppDownloadDialog({
               />
             </div>
 
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Label className="font-normal">Layout</Label>
+              <Segmented
+                value={layout}
+                onChange={setLayout}
+                options={[
+                  { value: "stack", label: "Stacked" },
+                  { value: "row", label: "Side by side" },
+                ]}
+              />
+            </div>
+
             {(iosUrl || androidUrl) && (
               <div
                 className={cn(
                   "flex flex-wrap items-center justify-center gap-3 rounded-xl border p-4",
+                  layout === "row" ? "flex-row" : "flex-col",
                   badgeVariant === "white" ? "bg-zinc-900" : "bg-secondary/40",
                 )}
               >

@@ -56,6 +56,7 @@ export const appDownloadBlockSchema = z
     android_url: playStoreUrl,
     display_mode: z.enum(["auto", "both"]).default("auto"),
     badge_variant: z.enum(["black", "white"]).default("black"),
+    layout: z.enum(["stack", "row"]).default("stack"),
   })
   .refine((v) => Boolean(v.ios_url || v.android_url), {
     message: "Add at least one store link",
