@@ -201,7 +201,7 @@ export function ProfileView({
 
   return (
     <div
-      className="relative flex min-h-full w-full flex-col items-center px-5 py-12"
+      className="relative flex min-h-dvh w-full flex-col items-center px-5 py-12"
       style={{ ...wp.style, color: styles.textColor, fontFamily: FONT_STACK[styles.font] }}
     >
       {wp.overlay > 0 ? (
