@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { getPublicProfile } from "@/lib/profile-data";
+import { detectDevice } from "@/lib/app-download";
 import { ProfileView } from "@/components/profile/profile-view";
 import { PageViewTracker } from "@/components/profile/page-view-tracker";
 import { resolveStyles } from "@/lib/themes";
@@ -49,6 +51,8 @@ export default async function PublicProfilePage({ params }: Params) {
     parsedStyles.success ? parsedStyles.data : {},
   );
 
+  const viewerDevice = detectDevice((await headers()).get("user-agent"));
+
   return (
     <main className={`min-h-dvh ${themeFontVars}`}>
       <ProfileView
@@ -57,6 +61,7 @@ export default async function PublicProfilePage({ params }: Params) {
         styles={styles}
         mode="live"
         hrefFor={(block) => `/api/go/${block.id}`}
+        viewerDevice={viewerDevice}
       />
       <PageViewTracker username={profile.username} />
     </main>

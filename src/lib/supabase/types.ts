@@ -17,7 +17,7 @@ export type Json =
   | Json[];
 
 /** Block discriminator. Kept in sync with the `blocks.type` CHECK constraint. */
-export type BlockType = "link" | "embed" | "social";
+export type BlockType = "link" | "embed" | "social" | "app_download";
 
 export interface Database {
   public: {
@@ -112,18 +112,21 @@ export interface Database {
           id: string;
           block_id: string;
           profile_id: string;
+          meta: Json;
           created_at: string;
         };
         Insert: {
           id?: string;
           block_id: string;
           profile_id: string;
+          meta?: Json;
           created_at?: string;
         };
         Update: {
           id?: string;
           block_id?: string;
           profile_id?: string;
+          meta?: Json;
           created_at?: string;
         };
         Relationships: [

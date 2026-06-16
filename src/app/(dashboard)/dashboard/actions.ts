@@ -8,6 +8,7 @@ import {
   linkBlockSchema,
   embedBlockSchema,
   socialBlockSchema,
+  appDownloadBlockSchema,
 } from "@/lib/validations/blocks";
 import { profileSchema } from "@/lib/validations/profile";
 import { appearanceSchema } from "@/lib/validations/appearance";
@@ -155,7 +156,7 @@ export async function createBlockAction(
       url: p.data.url,
       meta: { provider: embed.provider },
     };
-  } else {
+  } else if (type === "social") {
     const p = socialBlockSchema.safeParse(values);
     if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
     insert = {
@@ -164,6 +165,22 @@ export async function createBlockAction(
       title: SOCIAL_MAP[p.data.platform].label,
       url: p.data.url,
       meta: { platform: p.data.platform },
+    };
+  } else {
+    const p = appDownloadBlockSchema.safeParse(values);
+    if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+    insert = {
+      profile_id: ctx.userId,
+      type,
+      title: p.data.heading?.trim() || null,
+      url: null,
+      meta: {
+        ios_url: p.data.ios_url ?? null,
+        android_url: p.data.android_url ?? null,
+        display_mode: p.data.display_mode,
+        badge_variant: p.data.badge_variant,
+        heading: p.data.heading?.trim() || null,
+      },
     };
   }
 
@@ -207,13 +224,27 @@ export async function updateBlockAction(
         p.data.title?.trim() || (embed.provider === "youtube" ? "YouTube" : "Spotify"),
       meta: { provider: embed.provider },
     };
-  } else {
+  } else if (type === "social") {
     const p = socialBlockSchema.safeParse(values);
     if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
     patch = {
       url: p.data.url,
       title: SOCIAL_MAP[p.data.platform].label,
       meta: { platform: p.data.platform },
+    };
+  } else {
+    const p = appDownloadBlockSchema.safeParse(values);
+    if (!p.success) return { fieldErrors: p.error.flatten().fieldErrors };
+    patch = {
+      url: null,
+      title: p.data.heading?.trim() || null,
+      meta: {
+        ios_url: p.data.ios_url ?? null,
+        android_url: p.data.android_url ?? null,
+        display_mode: p.data.display_mode,
+        badge_variant: p.data.badge_variant,
+        heading: p.data.heading?.trim() || null,
+      },
     };
   }
 

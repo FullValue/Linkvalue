@@ -4,8 +4,10 @@ import type { ResolvedStyles } from "@/lib/themes";
 import { FONT_STACK } from "@/lib/font-stack";
 import { detectEmbed } from "@/lib/embeds";
 import { socialHref, type SocialPlatform } from "@/lib/socials";
+import { readAppDownloadMeta, type Device } from "@/lib/app-download";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { YouTubeEmbed } from "@/components/profile/youtube-embed";
+import { AppDownloadBlock } from "@/components/profile/app-download-block";
 import { siteConfig } from "@/lib/site";
 
 export interface ProfileViewProfile {
@@ -24,6 +26,8 @@ interface ProfileViewProps {
   mode?: Mode;
   /** Maps a link/embed block to its href (e.g. a tracking redirect). */
   hrefFor?: (block: Block) => string;
+  /** Visitor device (server-detected from UA) for app-download auto mode. */
+  viewerDevice?: Device;
 }
 
 const byPosition = (a: Block, b: Block) => a.position - b.position;
@@ -34,11 +38,14 @@ export function ProfileView({
   styles,
   mode = "live",
   hrefFor,
+  viewerDevice = "desktop",
 }: ProfileViewProps) {
   const active = blocks.filter((b) => b.is_active);
   const socials = active.filter((b) => b.type === "social").sort(byPosition);
   const content = active
-    .filter((b) => b.type === "link" || b.type === "embed")
+    .filter(
+      (b) => b.type === "link" || b.type === "embed" || b.type === "app_download",
+    )
     .sort(byPosition);
 
   const background =
@@ -122,16 +129,31 @@ export function ProfileView({
         ) : null}
 
         <div className="mt-6 flex w-full flex-col gap-3">
-          {content.map((block) =>
-            block.type === "embed" ? (
-              <EmbedBlock
-                key={block.id}
-                block={block}
-                styles={styles}
-                mode={mode}
-                href={hrefFor?.(block) ?? block.url ?? "#"}
-              />
-            ) : (
+          {content.map((block) => {
+            if (block.type === "embed") {
+              return (
+                <EmbedBlock
+                  key={block.id}
+                  block={block}
+                  styles={styles}
+                  mode={mode}
+                  href={hrefFor?.(block) ?? block.url ?? "#"}
+                />
+              );
+            }
+            if (block.type === "app_download") {
+              return (
+                <AppDownloadBlock
+                  key={block.id}
+                  blockId={block.id}
+                  meta={readAppDownloadMeta(block.meta)}
+                  device={viewerDevice}
+                  mode={mode}
+                  styles={styles}
+                />
+              );
+            }
+            return (
               <LinkButton
                 key={block.id}
                 block={block}
@@ -139,8 +161,8 @@ export function ProfileView({
                 mode={mode}
                 href={hrefFor?.(block) ?? block.url ?? "#"}
               />
-            ),
-          )}
+            );
+          })}
         </div>
 
         <a

@@ -32,8 +32,39 @@ export const socialBlockSchema = z.object({
     .refine((u) => !/^\s*(javascript|data|vbscript):/i.test(u), "Unsupported URL"),
 });
 
-export const blockTypeSchema = z.enum(["link", "embed", "social"]);
+/** App-store URL fields: optional, but host-checked to the right store. */
+const appStoreUrl = urlField
+  .refine(
+    (u) => /(^|\.)apps\.apple\.com$|(^|\.)itunes\.apple\.com$/i.test(new URL(u).hostname),
+    "Enter a valid App Store link (apps.apple.com)",
+  )
+  .optional()
+  .or(z.literal("").transform(() => undefined));
+
+const playStoreUrl = urlField
+  .refine(
+    (u) => /(^|\.)play\.google\.com$/i.test(new URL(u).hostname),
+    "Enter a valid Google Play link (play.google.com)",
+  )
+  .optional()
+  .or(z.literal("").transform(() => undefined));
+
+export const appDownloadBlockSchema = z
+  .object({
+    heading: z.string().trim().max(120).optional(),
+    ios_url: appStoreUrl,
+    android_url: playStoreUrl,
+    display_mode: z.enum(["auto", "both"]).default("auto"),
+    badge_variant: z.enum(["black", "white"]).default("black"),
+  })
+  .refine((v) => Boolean(v.ios_url || v.android_url), {
+    message: "Add at least one store link",
+    path: ["ios_url"],
+  });
+
+export const blockTypeSchema = z.enum(["link", "embed", "social", "app_download"]);
 
 export type LinkBlockInput = z.infer<typeof linkBlockSchema>;
 export type EmbedBlockInput = z.infer<typeof embedBlockSchema>;
 export type SocialBlockInput = z.infer<typeof socialBlockSchema>;
+export type AppDownloadBlockInput = z.infer<typeof appDownloadBlockSchema>;

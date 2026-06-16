@@ -15,19 +15,36 @@ export async function GET(
 
   const { data: block } = await admin
     .from("blocks")
-    .select("id, url, profile_id, is_active")
+    .select("id, url, type, meta, profile_id, is_active")
     .eq("id", blockId)
     .maybeSingle();
 
   const home = new URL("/", request.url);
-  if (!block || !block.url || !block.is_active) {
+  if (!block || !block.is_active) {
+    return NextResponse.redirect(home, 302);
+  }
+
+  // App-download blocks carry two store URLs in `meta`; the public page tells
+  // us which one was clicked via ?store=. Everything else uses block.url.
+  let target: string | null | undefined = block.url;
+  let clickMeta: Record<string, string> = {};
+  if (block.type === "app_download") {
+    const store = request.nextUrl.searchParams.get("store");
+    const m = (block.meta ?? {}) as { ios_url?: string; android_url?: string };
+    if (store === "ios") target = m.ios_url;
+    else if (store === "android") target = m.android_url;
+    else target = null;
+    if (store === "ios" || store === "android") clickMeta = { store };
+  }
+
+  if (!target) {
     return NextResponse.redirect(home, 302);
   }
 
   // Self-defending: only ever redirect to an http(s) destination.
   let dest: URL;
   try {
-    dest = new URL(block.url);
+    dest = new URL(target);
   } catch {
     return NextResponse.redirect(home, 302);
   }
@@ -37,11 +54,12 @@ export async function GET(
 
   const res = NextResponse.redirect(dest.toString(), 302);
 
-  const cookieName = `lk_c_${block.id}`;
+  // Per-store cookie so iOS and Android clicks are counted independently.
+  const cookieName = `lk_c_${block.id}${clickMeta.store ? `_${clickMeta.store}` : ""}`;
   if (!request.cookies.get(cookieName)) {
     await admin
       .from("clicks")
-      .insert({ block_id: block.id, profile_id: block.profile_id });
+      .insert({ block_id: block.id, profile_id: block.profile_id, meta: clickMeta });
     res.cookies.set(cookieName, "1", {
       maxAge: 1800,
       httpOnly: true,
