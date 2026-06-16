@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useBuilder } from "./builder-context";
 import { readAppDownloadMeta } from "@/lib/app-download";
 import type { Block } from "@/lib/supabase/types";
@@ -90,13 +91,18 @@ export function AppDownloadDialog({
       badge_variant: badgeVariant,
       layout,
     };
-    const res = editing
-      ? await updateBlock(block!.id, "app_download", values)
-      : await createBlock("app_download", values);
-    setPending(false);
-    if (res.fieldErrors) return setErrors(res.fieldErrors);
-    if (res.error) return;
-    close(false);
+    try {
+      const res = editing
+        ? await updateBlock(block!.id, "app_download", values)
+        : await createBlock("app_download", values);
+      if (res.fieldErrors) return setErrors(res.fieldErrors);
+      if (res.error) return;
+      close(false);
+    } catch {
+      toast.error("Something went wrong — please try again");
+    } finally {
+      setPending(false);
+    }
   }
 
   const appStoreSrc =

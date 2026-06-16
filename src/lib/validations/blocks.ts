@@ -32,22 +32,39 @@ export const socialBlockSchema = z.object({
     .refine((u) => !/^\s*(javascript|data|vbscript):/i.test(u), "Unsupported URL"),
 });
 
-/** App-store URL fields: optional, but host-checked to the right store. */
-const appStoreUrl = urlField
-  .refine(
-    (u) => /(^|\.)apps\.apple\.com$|(^|\.)itunes\.apple\.com$/i.test(new URL(u).hostname),
-    "Enter a valid App Store link (apps.apple.com)",
-  )
-  .optional()
-  .or(z.literal("").transform(() => undefined));
+/**
+ * App-store URL fields: optional, but host-checked to the right store.
+ * NOTE: Zod v4 runs all refinements regardless of earlier failures, so the
+ * host check must tolerate empty/invalid input (never let `new URL` throw —
+ * a thrown refine aborts safeParse instead of returning a field error).
+ */
+const hostMatches = (u: string, re: RegExp): boolean => {
+  try {
+    return re.test(new URL(u).hostname);
+  } catch {
+    return false;
+  }
+};
 
-const playStoreUrl = urlField
-  .refine(
-    (u) => /(^|\.)play\.google\.com$/i.test(new URL(u).hostname),
-    "Enter a valid Google Play link (play.google.com)",
-  )
-  .optional()
-  .or(z.literal("").transform(() => undefined));
+const storeUrlField = (re: RegExp, message: string) =>
+  z
+    .string()
+    .trim()
+    .max(2048)
+    .refine((u) => u === "" || /^https?:\/\//i.test(u), "URL must start with http:// or https://")
+    .refine((u) => u === "" || hostMatches(u, re), message)
+    .transform((u) => (u === "" ? undefined : u))
+    .optional();
+
+const appStoreUrl = storeUrlField(
+  /(^|\.)apps\.apple\.com$|(^|\.)itunes\.apple\.com$/i,
+  "Enter a valid App Store link (apps.apple.com)",
+);
+
+const playStoreUrl = storeUrlField(
+  /(^|\.)play\.google\.com$/i,
+  "Enter a valid Google Play link (play.google.com)",
+);
 
 export const appDownloadBlockSchema = z
   .object({
