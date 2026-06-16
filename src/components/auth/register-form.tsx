@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { normalizeUsername } from "@/lib/usernames";
-import { siteConfig } from "@/lib/site";
+import { profileHostHint } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { SubmitButton, FormError, FieldError } from "./form-bits";
 
@@ -24,7 +24,7 @@ type Availability =
   | { state: "ok"; message: string }
   | { state: "bad"; message: string };
 
-const host = siteConfig.url.replace(/^https?:\/\//, "");
+const hostHint = profileHostHint();
 
 export function RegisterForm() {
   const [state, formAction] = useActionState<AuthState, FormData>(signUpAction, {});
@@ -71,9 +71,11 @@ export function RegisterForm() {
           <div className="grid gap-2">
             <Label htmlFor="username">Username</Label>
             <div className="border-input focus-within:ring-ring flex items-stretch overflow-hidden rounded-md border focus-within:ring-2">
-              <span className="text-muted-foreground bg-muted/50 flex items-center border-r px-3 text-sm select-none">
-                {host}/
-              </span>
+              {hostHint.before && (
+                <span className="text-muted-foreground bg-muted/50 flex items-center border-r px-3 text-sm select-none">
+                  {hostHint.before}
+                </span>
+              )}
               <input
                 id="username"
                 name="username"
@@ -86,6 +88,11 @@ export function RegisterForm() {
                 className="placeholder:text-muted-foreground flex-1 bg-transparent px-3 py-2 text-sm outline-none"
                 aria-describedby="username-status"
               />
+              {hostHint.after && (
+                <span className="text-muted-foreground bg-muted/50 flex items-center border-l px-3 text-sm select-none">
+                  {hostHint.after}
+                </span>
+              )}
               <span className="flex items-center pr-3" id="username-status">
                 {avail.state === "checking" && (
                   <Loader2 className="text-muted-foreground size-4 animate-spin" />

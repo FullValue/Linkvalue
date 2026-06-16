@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser, getCurrentProfile } from "@/lib/auth/user";
+import { UpdateUsernameForm } from "@/components/account/update-username-form";
 import { UpdateEmailForm } from "@/components/account/update-email-form";
 import { UpdatePasswordForm } from "@/components/account/update-password-form";
 import { DeleteAccount } from "@/components/account/delete-account";
@@ -19,6 +20,7 @@ export default async function SettingsPage() {
       </p>
 
       <div className="mt-8 flex flex-col gap-6">
+        <UpdateUsernameForm currentUsername={profile.username} />
         <UpdateEmailForm currentEmail={user.email ?? ""} />
         <UpdatePasswordForm />
         <DeleteAccount username={profile.username} />

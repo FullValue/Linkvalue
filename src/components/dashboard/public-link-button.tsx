@@ -4,13 +4,12 @@ import { useState } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { siteConfig } from "@/lib/site";
-
-const host = siteConfig.url.replace(/^https?:\/\//, "");
+import { profileDisplayUrl, profileUrl } from "@/lib/site";
 
 export function PublicLinkButton({ username }: { username: string }) {
   const [copied, setCopied] = useState(false);
-  const url = `${siteConfig.url}/${username}`;
+  const url = profileUrl(username);
+  const display = profileDisplayUrl(username);
 
   async function copy() {
     try {
@@ -37,9 +36,7 @@ export function PublicLinkButton({ username }: { username: string }) {
         ) : (
           <Copy className="text-muted-foreground size-3.5" />
         )}
-        <span className="max-w-[150px] truncate">
-          {host}/{username}
-        </span>
+        <span className="max-w-[150px] truncate">{display}</span>
       </Button>
       <Button
         asChild
@@ -48,7 +45,7 @@ export function PublicLinkButton({ username }: { username: string }) {
         className="rounded-l-none border-l-0 px-2"
         title="Open public page"
       >
-        <a href={`/${username}`} target="_blank" rel="noreferrer">
+        <a href={url} target="_blank" rel="noreferrer">
           <ExternalLink className="size-3.5" />
         </a>
       </Button>

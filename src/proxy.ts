@@ -1,9 +1,24 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { tenantSubdomain } from "@/lib/usernames";
 
 // Next.js 16 "proxy" convention (formerly `middleware`). Refreshes the Supabase
 // session on each request and enforces coarse route protection.
 export function proxy(request: NextRequest) {
+  // Wildcard subdomains (`<handle>.lumen.app`) serve only the public profile.
+  // Rewrite the apex path to the `[username]` route; everything else (API
+  // tracking calls, assets) passes through untouched. No-op until a root
+  // domain is configured, so path-based routing keeps working everywhere else.
+  const sub = tenantSubdomain(request.headers.get("host") ?? "");
+  if (sub) {
+    if (request.nextUrl.pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${sub}`;
+      return NextResponse.rewrite(url);
+    }
+    return NextResponse.next();
+  }
+
   return updateSession(request);
 }
 

@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { siteConfig } from "@/lib/site";
+import { profileDisplayUrl, profileUrl } from "@/lib/site";
 
 /** Internal render resolution — large so downloads stay crisp when printed. */
 const SIZE = 1024;
@@ -52,7 +52,7 @@ export function QrCodeButton({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const url = `${siteConfig.url}/${username}`;
+  const url = profileUrl(username);
   const initial = (displayName?.trim() || username).charAt(0).toUpperCase() || "•";
 
   const draw = useCallback(async () => {
@@ -179,9 +179,7 @@ export function QrCodeButton({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>QR code</DialogTitle>
-          <DialogDescription>
-            Points to {siteConfig.url.replace(/^https?:\/\//, "")}/{username}
-          </DialogDescription>
+          <DialogDescription>Points to {profileDisplayUrl(username)}</DialogDescription>
         </DialogHeader>
 
         <div className="grid place-items-center">

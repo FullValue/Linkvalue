@@ -94,6 +94,29 @@ export function isReservedUsername(username: string): boolean {
   return RESERVED_USERNAMES.has(username.trim().toLowerCase());
 }
 
+/**
+ * Extracts the tenant handle from a request host when running on a wildcard
+ * root domain (`<handle>.lumen.app`). Returns null for the apex, `www`, any
+ * reserved/nested subdomain, or when no root domain is configured — so the
+ * main app keeps serving on the apex and only real handles get rewritten to
+ * their public profile.
+ */
+export function tenantSubdomain(host: string): string | null {
+  const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN?.replace(/^https?:\/\//, "")
+    .replace(/\/$/, "")
+    .toLowerCase();
+  if (!root) return null;
+
+  const h = host.split(":")[0].toLowerCase();
+  if (h === root || h === `www.${root}`) return null;
+  if (!h.endsWith(`.${root}`)) return null;
+
+  const sub = h.slice(0, h.length - root.length - 1);
+  if (!sub || sub.includes(".")) return null; // no nested subdomains
+  if (isReservedUsername(sub)) return null;
+  return sub;
+}
+
 /** Normalises raw input toward a valid handle (used by the signup field). */
 export function normalizeUsername(input: string): string {
   return input

@@ -6,7 +6,7 @@ import { PageViewTracker } from "@/components/profile/page-view-tracker";
 import { resolveStyles } from "@/lib/themes";
 import { customStylesSchema } from "@/lib/validations/appearance";
 import { themeFontVars } from "@/lib/fonts";
-import { siteConfig } from "@/lib/site";
+import { profileUrl, siteConfig } from "@/lib/site";
 
 type Params = { params: Promise<{ username: string }> };
 
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { profile } = data;
   const title = profile.display_name?.trim() || `@${profile.username}`;
   const description = profile.bio?.trim() || `${title} — all their links in one place.`;
-  const url = `${siteConfig.url}/${profile.username}`;
+  const url = profileUrl(profile.username);
 
   return {
     title,
