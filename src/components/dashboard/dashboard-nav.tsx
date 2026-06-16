@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import { PublicLinkButton } from "./public-link-button";
+import { QrCodeButton } from "./qr-code-button";
 import { UserMenu } from "./user-menu";
 
 const tabs = [
@@ -53,6 +54,7 @@ export function DashboardNav({
 
         <div className="ml-auto flex items-center gap-2.5">
           <PublicLinkButton username={username} />
+          <QrCodeButton username={username} displayName={displayName} />
           <UserMenu username={username} displayName={displayName} avatarUrl={avatarUrl} />
         </div>
       </div>
